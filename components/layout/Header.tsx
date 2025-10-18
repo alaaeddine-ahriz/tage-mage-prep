@@ -42,12 +42,11 @@ export function Header({ user }: HeaderProps) {
     .toUpperCase() || user?.email?.[0].toUpperCase() || 'U'
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-white dark:bg-slate-900">
+      <header className="sticky top-0 z-30 border-b bg-white dark:bg-slate-900">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-4 md:hidden">
-          <Brain className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-          <span className="text-xl font-bold text-slate-900 dark:text-white">
-            TM Tracker
+            <span className="text-xl font-bold text-blue-900 dark:text-white">
+            Tage Mage
           </span>
         </div>
 

@@ -236,7 +236,7 @@ export default function ErrorsPage() {
                 onClick={() => setFilter(subtest.value)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === subtest.value
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-slate-700 text-white dark:bg-slate-200 dark:text-slate-900'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`}
               >
@@ -284,7 +284,7 @@ export default function ErrorsPage() {
                   backgroundPosition: 'center'
                 }}
                 className={`relative h-48 w-full overflow-hidden rounded-lg border-2 border-orange-200 p-4 text-left transition-all hover:shadow-lg dark:border-orange-900 ${
-                  !error.image_url ? 'bg-gradient-to-br from-orange-100 via-orange-50 to-red-100 dark:from-orange-950 dark:via-orange-900 dark:to-red-950' : 'bg-white dark:bg-slate-950'
+                  !error.image_url ? 'bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 dark:from-orange-950 dark:via-orange-900 dark:to-red-950' : 'bg-white dark:bg-slate-950'
                 }`}
               >
                 {/* Button to open modal */}
@@ -313,17 +313,17 @@ export default function ErrorsPage() {
                   
                   <div className="space-y-2">
                     {error.explanation && (
-                      <p className={`text-sm font-medium line-clamp-2 ${error.image_url ? 'text-white text-shadow' : 'text-slate-900 dark:text-white'}`}>
+                      <p className={`text-sm font-medium line-clamp-2 ${error.image_url ? 'text-white text-shadow' : 'text-white'}`}>
                         {error.explanation}
                       </p>
                     )}
-                    <div className={`flex items-center justify-between text-xs ${error.image_url ? 'text-white/90' : 'text-slate-700 dark:text-slate-300'}`}>
+                    <div className={`flex items-center justify-between text-xs ${error.image_url ? 'text-white/90' : 'text-white/90'}`}>
                       <span>Niveau {error.mastery_level}/5</span>
                       <span>{error.review_count} révisions</span>
                     </div>
-                    <div className={`h-1.5 w-full overflow-hidden rounded-full ${error.image_url ? 'bg-white/30' : 'bg-white/50 dark:bg-black/30'}`}>
+                    <div className={`h-1.5 w-full overflow-hidden rounded-full ${error.image_url ? 'bg-white/30' : 'bg-white/30 dark:bg-black/30'}`}>
                       <div 
-                        className={`h-full transition-all ${error.image_url ? 'bg-blue-500' : 'bg-orange-600'}`}
+                        className={`h-full transition-all ${error.image_url ? 'bg-slate-500 dark:bg-slate-300' : 'bg-orange-600'}`}
                         style={{ width: `${(error.mastery_level / 5) * 100}%` }}
                       />
                     </div>
@@ -357,13 +357,13 @@ export default function ErrorsPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   </div>
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-700 to-blue-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
                 )}
                 
                 {/* Button to open modal */}
                 <button
                   onClick={() => openErrorModal(error)}
-                  className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-blue-700 active:scale-95"
+                  className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-blue-700 active:scale-95 dark:bg-blue-400 dark:text-blue-950 dark:hover:bg-blue-300"
                   aria-label="Voir l'erreur"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
@@ -388,17 +388,17 @@ export default function ErrorsPage() {
                   
                   <div className="space-y-2">
                     {error.explanation && (
-                      <p className="text-sm font-medium text-slate-900 line-clamp-2 dark:text-white">
+                      <p className="text-sm font-medium text-white line-clamp-2">
                         {error.explanation}
                       </p>
                     )}
-                    <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center justify-between text-xs text-white/90">
                       <span>Niveau {error.mastery_level}/5</span>
                       <span>{new Date(error.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/50 dark:bg-black/30">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30 dark:bg-black/30">
                       <div 
-                        className="h-full bg-blue-500 transition-all"
+                        className="h-full bg-white dark:bg-slate-400 transition-all"
                         style={{ width: `${(error.mastery_level / 5) * 100}%` }}
                       />
                     </div>
@@ -504,26 +504,25 @@ export default function ErrorsPage() {
             const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
             setSelectedError(allErrors[index])
           }}
-          hideNavigation={true}
         >
           {(item) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const error = item as any
             return (
-              <div className="space-y-8 pb-32">
+              <div className="space-y-6 pb-32">
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-primary text-primary-foreground">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-blue-100 text-blue-900 dark:bg-blue-800 dark:text-white">
                     {error.subtest}
                   </span>
                   {isDueForReview(error.next_review_at) && (
-                    <span className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400">
+                    <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-white">
                       <Clock className="h-3 w-3" />
                       À réviser
                     </span>
                   )}
                   {error.mastery_level >= 4 && (
-                    <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                    <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-white">
                       <CheckCircle className="h-3 w-3" />
                       Maîtrisée
                     </span>
@@ -536,18 +535,18 @@ export default function ErrorsPage() {
                   <>
                     {/* Title - either correct_answer or first line of explanation */}
                     {error.correct_answer ? (
-                      <h2 className="text-3xl font-bold text-foreground leading-tight">
+                      <h2 className="text-3xl font-bold text-blue-900 dark:text-white leading-tight">
                         {error.correct_answer}
                       </h2>
                     ) : error.explanation ? (
-                      <div className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
+                      <div className="text-3xl font-bold text-blue-900 dark:text-white leading-tight whitespace-pre-wrap">
                         {error.explanation}
                       </div>
                     ) : null}
                     
                     {/* Additional explanation if correct_answer exists */}
                     {error.correct_answer && error.explanation && (
-                      <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      <div className="text-base text-blue-700 dark:text-white leading-relaxed whitespace-pre-wrap">
                         {error.explanation}
                       </div>
                     )}
@@ -582,10 +581,10 @@ export default function ErrorsPage() {
                     {/* Explanation */}
                     {error.explanation && (
                       <div className="space-y-2">
-                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        <h3 className="text-xs font-semibold text-blue-600 dark:text-white uppercase tracking-wide">
                           Explication
                         </h3>
-                        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                        <p className="text-base text-blue-700 dark:text-white leading-relaxed whitespace-pre-wrap">
                           {error.explanation}
                         </p>
                       </div>
@@ -597,21 +596,21 @@ export default function ErrorsPage() {
                 <div className="grid grid-cols-3 gap-6">
                   {/* Mastery */}
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Maîtrise</p>
+                    <p className="text-xs text-blue-600 dark:text-white mb-1.5">Maîtrise</p>
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-3xl font-bold text-foreground">{error.mastery_level}</span>
-                      <span className="text-sm text-muted-foreground">/5</span>
+                      <span className="text-3xl font-bold text-blue-900 dark:text-white">{error.mastery_level}</span>
+                      <span className="text-sm text-blue-600 dark:text-white">/5</span>
                     </div>
                   </div>
                   {/* Reviews */}
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Révisions</p>
-                    <p className="text-3xl font-bold text-foreground">{error.review_count}</p>
+                    <p className="text-xs text-blue-600 dark:text-white mb-1.5">Révisions</p>
+                    <p className="text-3xl font-bold text-blue-900 dark:text-white">{error.review_count}</p>
                   </div>
                   {/* Next review */}
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Prochaine</p>
-                    <p className="text-3xl font-bold text-primary">
+                    <p className="text-xs text-blue-600 dark:text-white mb-1.5">Prochaine</p>
+                    <p className="text-3xl font-bold text-blue-900 dark:text-white">
                       {new Date(error.next_review_at).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'short'
@@ -627,7 +626,7 @@ export default function ErrorsPage() {
 
       {/* Fixed Action Buttons - Mobile */}
       {isMobile && selectedError && (
-        <div className="fixed bottom-16 left-0 right-0 p-8 z-[60]">
+        <div className="fixed bottom-16 left-0 right-0 px-4 pb-4 z-[60]">
           <div className="flex gap-3">
             <Button
               variant="destructive"
@@ -635,14 +634,14 @@ export default function ErrorsPage() {
               disabled={updating}
               className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg"
             >
-              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : '😕 Oublié'}
+              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Oublié'}
             </Button>
             <Button
               onClick={() => handleReview(true, selectedError)}
               disabled={updating}
               className="flex-1 h-14 text-base font-semibold bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg"
             >
-              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : '🎯 Je sais!'}
+              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Je sais'}
             </Button>
           </div>
         </div>

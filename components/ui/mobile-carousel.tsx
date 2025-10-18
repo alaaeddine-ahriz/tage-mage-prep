@@ -13,7 +13,6 @@ interface MobileCarouselProps {
   onIndexChange: (index: number) => void
   children: (item: unknown, index: number) => React.ReactNode
   className?: string
-  hideNavigation?: boolean
 }
 
 export function MobileCarousel({
@@ -24,7 +23,6 @@ export function MobileCarousel({
   onIndexChange,
   children,
   className,
-  hideNavigation = false,
 }: MobileCarouselProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
@@ -102,9 +100,9 @@ export function MobileCarousel({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-background">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 backdrop-blur-sm p-8">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm px-4 py-3">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -119,50 +117,48 @@ export function MobileCarousel({
           </span>
         </div>
 
-        {/* Navigation arrows - visible on both mobile and desktop */}
-        {items.length > 1 && (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goToPrevious}
-              disabled={currentIndex === 0}
-              className="h-9 w-9"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goToNext}
-              disabled={currentIndex === items.length - 1}
-              className="h-9 w-9"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
+        {/* Navigation arrows for desktop */}
+        <div className="hidden sm:flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goToPrevious}
+            disabled={currentIndex === 0}
+            className="h-9 w-9"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goToNext}
+            disabled={currentIndex === items.length - 1}
+            className="h-9 w-9"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
       <div
         ref={containerRef}
         className={cn(
-          "h-[calc(100vh-60px)] overflow-y-auto",
+          "h-[calc(100vh-60px)] overflow-y-auto bg-white dark:bg-slate-950",
           className
         )}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className="container max-w-4xl mx-auto p-8">
+        <div className="container max-w-4xl mx-auto px-6 py-8">
           {children(items[currentIndex], currentIndex)}
         </div>
       </div>
 
       {/* Mobile Navigation Dots */}
-      {!hideNavigation && items.length > 1 && (
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center gap-2 bg-background/95 backdrop-blur-sm border-t p-8 sm:hidden">
+      {items.length > 1 && (
+        <div className="fixed bottom-0 left-0 right-0 flex justify-center gap-2 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-t px-4 py-3 sm:hidden">
           {items.map((_, index) => (
             <button
               key={index}
@@ -188,7 +184,7 @@ export function MobileCarousel({
             className="fixed left-0 top-1/2 -translate-y-1/2 z-40 h-24 w-16 flex items-center justify-start pl-2 opacity-0 hover:opacity-100 active:opacity-100 transition-opacity sm:hidden disabled:opacity-0"
             aria-label="Précédent"
           >
-            <div className="bg-background/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+            <div className="bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
               <ChevronLeft className="h-6 w-6" />
             </div>
           </button>
@@ -198,7 +194,7 @@ export function MobileCarousel({
             className="fixed right-0 top-1/2 -translate-y-1/2 z-40 h-24 w-16 flex items-center justify-end pr-2 opacity-0 hover:opacity-100 active:opacity-100 transition-opacity sm:hidden disabled:opacity-0"
             aria-label="Suivant"
           >
-            <div className="bg-background/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+            <div className="bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
               <ChevronRight className="h-6 w-6" />
             </div>
           </button>
