@@ -1,36 +1,173 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📘 Tage Mage Tracker - PWA
 
-## Getting Started
+A progressive web app for tracking Tage Mage exam preparation with tests, errors, and spaced repetition for notions.
 
-First, run the development server:
+## 🚀 Features
+
+- ✅ **Tests & Scores**: Track your performance on practice tests (TD) and mock exams
+- ✅ **Error Tracking**: Log mistakes with photos, categorize, and review them
+- ✅ **Spaced Repetition**: Master concepts with an intelligent review system
+- ✅ **Offline First**: Works without internet, syncs when back online
+- ✅ **Dark Mode**: Full theme support
+- ✅ **PWA**: Installable on iOS, Android, and Desktop
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Database**: Supabase (PostgreSQL with RLS)
+- **Auth**: Supabase Auth (Google OAuth)
+- **UI**: Tailwind CSS + shadcn/ui
+- **Charts**: Recharts
+- **PWA**: next-pwa
+- **Image Compression**: browser-image-compression
+
+## 📦 Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Supabase
+
+Create a `.env.local` file with your Supabase credentials:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 3. Run Database Migrations
+
+Execute the SQL in `supabase/migrations/001_initial_schema.sql` in your Supabase SQL Editor.
+
+### 4. Configure Google OAuth
+
+1. Go to Supabase Dashboard → Authentication → Providers
+2. Enable Google provider
+3. Add your Google OAuth credentials from [Google Cloud Console](https://console.cloud.google.com)
+4. Set authorized redirect URI: `https://your-project.supabase.co/auth/v1/callback`
+
+### 5. Create Storage Bucket
+
+In Supabase Dashboard → Storage:
+1. Create a new bucket named `error-images`
+2. Set it to **Public** (or configure RLS policies)
+
+### 6. Generate PWA Icons
+
+You need to create two icon files in the `public` folder:
+- `icon-192.png` (192x192px)
+- `icon-512.png` (512x512px)
+
+These should be square icons with your app logo/branding.
+
+### 7. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📱 PWA Installation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### iOS (iPhone/iPad)
+1. Open the app in Safari
+2. Tap the Share button
+3. Tap "Add to Home Screen"
 
-## Learn More
+### Android
+1. Open the app in Chrome
+2. Tap the menu (three dots)
+3. Tap "Add to Home Screen"
 
-To learn more about Next.js, take a look at the following resources:
+### Desktop (Chrome/Edge)
+1. Click the install icon in the address bar
+2. Or: Menu → "Install Tage Mage Tracker"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🗂️ Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+tage-mage-tracker/
+├── app/
+│   ├── (auth)/              # Authentication pages
+│   ├── (dashboard)/         # Main app pages
+│   │   ├── page.tsx         # Dashboard
+│   │   ├── tests/           # Tests & scores
+│   │   ├── errors/          # Error tracking
+│   │   └── notions/         # Spaced repetition
+│   └── auth/callback/       # OAuth callback
+├── components/
+│   ├── ui/                  # shadcn/ui components
+│   ├── forms/               # Form components
+│   ├── charts/              # Chart components
+│   └── layout/              # Navigation components
+├── lib/
+│   ├── supabase/            # Supabase clients
+│   ├── utils/               # Utility functions
+│   └── types/               # TypeScript types
+└── supabase/
+    └── migrations/          # Database schema
+```
 
-## Deploy on Vercel
+## 🎯 Usage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Adding a Test
+1. Go to Tests page
+2. Click "Ajouter un test"
+3. Fill in: date, type (TD/Blanc), subtest, score
+4. Submit (takes < 10 seconds)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Logging an Error
+1. Go to Errors page
+2. Click "Ajouter une erreur"
+3. Take/upload photo of the question
+4. Add subtest, category, correct answer, and explanation
+5. Submit
+
+### Reviewing a Notion
+1. Go to Notions page
+2. Click on a notion that's due for review
+3. Read the notion description
+4. Click "Oublié" or "Je sais"
+5. The system automatically schedules the next review
+
+## 🔒 Security
+
+- All data is protected with Row Level Security (RLS)
+- Users can only access their own data
+- Authentication required for all protected routes
+- Image uploads are compressed client-side before upload
+
+## 📊 Spaced Repetition Algorithm
+
+| Level | Interval |
+|-------|----------|
+| 0     | 1 day    |
+| 1     | 3 days   |
+| 2     | 7 days   |
+| 3     | 14 days  |
+| 4     | 30 days  |
+| 5     | 90 days  |
+
+## 🚧 Roadmap
+
+- [ ] Push notifications for daily reminders
+- [ ] Data export (CSV/PDF)
+- [ ] Quiz mode for notions
+- [ ] Advanced statistics and analytics
+- [ ] Collaborative study groups
+
+## 📄 License
+
+MIT
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+---
+
+Built with ❤️ for Tage Mage preparation

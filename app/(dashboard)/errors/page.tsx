@@ -1,0 +1,433 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { AddErrorForm } from '@/components/forms/AddErrorForm'
+import { Plus, Clock, CheckCircle, Loader2 } from 'lucide-react'
+import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
+import { toast } from 'sonner'
+import Image from 'next/image'
+
+const SUBTESTS = [
+  { value: 'all', label: 'Tous' },
+  { value: 'calcul', label: 'Calcul' },
+  { value: 'logique', label: 'Logique' },
+  { value: 'expression', label: 'Expression' },
+  { value: 'comprehension', label: 'Compréhension' },
+  { value: 'conditions', label: 'Conditions' },
+]
+
+export default function ErrorsPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [errors, setErrors] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedError, setSelectedError] = useState<any>(null)
+  const [updating, setUpdating] = useState(false)
+
+  useEffect(() => {
+    loadErrors()
+  }, [])
+
+  const loadErrors = async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from('errors')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('next_review_at', { ascending: true })
+
+      setErrors(data || [])
+    } catch (error) {
+      console.error('Error loading errors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const errorsDue = errors.filter((e: any) => isDueForReview(e.next_review_at))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const errorsUpcoming = errors.filter((e: any) => !isDueForReview(e.next_review_at))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const errorsMastered = errors.filter((e: any) => e.mastery_level >= 4)
+
+  const filteredErrorsDue = filter === 'all' 
+    ? errorsDue 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    : errorsDue.filter((e: any) => e.subtest === filter)
+
+  const filteredErrorsUpcoming = filter === 'all' 
+    ? errorsUpcoming 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    : errorsUpcoming.filter((e: any) => e.subtest === filter)
+
+  const openErrorModal = (error: any) => {
+    setSelectedError(error)
+  }
+
+  const handleReview = async (success: boolean) => {
+    if (!selectedError) return
+    setUpdating(true)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) throw new Error('Not authenticated')
+
+      const currentLevel = selectedError.mastery_level || 0
+      const newMasteryLevel = updateMasteryLevel(currentLevel, success)
+      const nextReviewDate = calculateNextReviewDate(newMasteryLevel)
+      const intervalDays = getNextReviewInterval(newMasteryLevel)
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase as any)
+        .from('errors')
+        .update({
+          mastery_level: newMasteryLevel,
+          last_reviewed_at: new Date().toISOString(),
+          next_review_at: nextReviewDate.toISOString(),
+          review_count: (selectedError.review_count || 0) + 1,
+        })
+        .eq('id', selectedError.id)
+
+      if (updateError) throw updateError
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('error_reviews').insert({
+        error_id: selectedError.id,
+        user_id: user.id,
+        success,
+        new_mastery_level: newMasteryLevel,
+        next_review_interval_days: intervalDays,
+      })
+
+      toast.success(
+        success
+          ? `Bien joué! Prochaine révision dans ${intervalDays} jour${intervalDays > 1 ? 's' : ''}`
+          : 'On révise demain !'
+      )
+
+      // Reload errors and close modal
+      await loadErrors()
+      setSelectedError(null)
+    } catch (error) {
+      console.error('Error updating:', error)
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Erreurs
+          </h1>
+        </div>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Ajouter une erreur</DialogTitle>
+            </DialogHeader>
+            <AddErrorForm onSuccess={loadErrors} />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Stats compactes */}
+      <div className="flex gap-2">
+        <div className="flex items-center gap-1.5 rounded-md border bg-slate-50 px-3 py-1.5 dark:bg-slate-900">
+          <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+          <span className="text-lg font-bold">{errors.length}</span>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-3 py-1.5 dark:border-orange-900/50 dark:bg-orange-950/50">
+          <Clock className="h-3.5 w-3.5 text-orange-600" />
+          <span className="text-lg font-bold text-orange-600">{errorsDue.length}</span>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 dark:border-green-900/50 dark:bg-green-950/50">
+          <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+          <span className="text-lg font-bold text-green-600">{errorsMastered.length}</span>
+        </div>
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex flex-wrap gap-2">
+        {SUBTESTS.map((subtest) => (
+          <button
+            key={subtest.value}
+            onClick={() => setFilter(subtest.value)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              filter === subtest.value
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+            }`}
+          >
+            {subtest.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Errors to Review */}
+      {filteredErrorsDue.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            À réviser maintenant ({filteredErrorsDue.length})
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {filteredErrorsDue.map((error: any, index: number) => (
+              <div
+                key={error.id}
+                style={{
+                  backgroundImage: error.image_url 
+                    ? `linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent), url(${error.image_url})`
+                    : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+                className={`relative h-48 w-full overflow-hidden rounded-lg border-2 border-orange-200 p-4 text-left transition-all hover:shadow-lg dark:border-orange-900 ${
+                  !error.image_url ? 'bg-gradient-to-br from-orange-100 via-orange-50 to-red-100 dark:from-orange-950 dark:via-orange-900 dark:to-red-950' : 'bg-white dark:bg-slate-950'
+                }`}
+              >
+                {/* Button to open modal */}
+                <button
+                  onClick={() => openErrorModal(error)}
+                  className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-orange-700 active:scale-95"
+                  aria-label="Voir l'erreur"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                </button>
+                
+                {/* Content */}
+                <div className="relative flex h-full flex-col justify-between pointer-events-none">
+                  <div className="flex items-start justify-between">
+                    <span className="inline-flex items-center rounded-md bg-white/90 dark:bg-black/90 px-2 py-1 text-xs font-medium capitalize">
+                      {error.subtest}
+                    </span>
+                    <span className="inline-flex items-center rounded-md bg-orange-600 px-2 py-1 text-xs font-medium text-white">
+                      <Clock className="mr-1 h-3 w-3" />
+                      Réviser
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {error.explanation && (
+                      <p className={`text-sm font-medium line-clamp-2 ${error.image_url ? 'text-white text-shadow' : 'text-slate-900 dark:text-white'}`}>
+                        {error.explanation}
+                      </p>
+                    )}
+                    <div className={`flex items-center justify-between text-xs ${error.image_url ? 'text-white/90' : 'text-slate-700 dark:text-slate-300'}`}>
+                      <span>Niveau {error.mastery_level}/5</span>
+                      <span>{error.review_count} révisions</span>
+                    </div>
+                    <div className={`h-1.5 w-full overflow-hidden rounded-full ${error.image_url ? 'bg-white/30' : 'bg-white/50 dark:bg-black/30'}`}>
+                      <div 
+                        className={`h-full transition-all ${error.image_url ? 'bg-blue-500' : 'bg-orange-600'}`}
+                        style={{ width: `${(error.mastery_level / 5) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming Errors */}
+      {filteredErrorsUpcoming.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Prochaines révisions ({filteredErrorsUpcoming.length})
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {filteredErrorsUpcoming.map((error: any, index: number) => (
+              <div
+                key={error.id}
+                className="relative h-48 w-full overflow-hidden rounded-lg border transition-all hover:shadow-md"
+              >
+                {/* Background image */}
+                {error.image_url ? (
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${error.image_url})` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950" />
+                )}
+                
+                {/* Button to open modal */}
+                <button
+                  onClick={() => openErrorModal(error)}
+                  className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-blue-700 active:scale-95"
+                  aria-label="Voir l'erreur"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                </button>
+                
+                {/* Content overlay */}
+                <div className="relative flex h-full flex-col justify-between p-4 pointer-events-none">
+                  <div className="flex items-start justify-between">
+                    <span className="inline-flex items-center rounded-md bg-white/90 dark:bg-black/90 px-2 py-1 text-xs font-medium capitalize">
+                      {error.subtest}
+                    </span>
+                    {error.mastery_level >= 4 && (
+                      <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-100">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        Maîtrisée
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {error.explanation && (
+                      <p className="text-sm font-medium text-slate-900 line-clamp-2 dark:text-white">
+                        {error.explanation}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                      <span>Niveau {error.mastery_level}/5</span>
+                      <span>{new Date(error.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/50 dark:bg-black/30">
+                      <div 
+                        className="h-full bg-blue-500 transition-all"
+                        style={{ width: `${(error.mastery_level / 5) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {errors.length === 0 && !loading && (
+        <Card className="mt-8">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Clock className="h-12 w-12 text-slate-400 mb-4" />
+            <p className="text-lg font-medium text-slate-900 dark:text-white">
+              Aucune erreur enregistrée
+            </p>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              Commencez à suivre vos erreurs pour mieux progresser
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error Modal */}
+      <Dialog open={!!selectedError} onOpenChange={(open) => {
+        if (!open) setSelectedError(null)
+      }}>
+        {selectedError && (
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-sm capitalize text-slate-600 dark:text-slate-400">
+                {selectedError.subtest}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {selectedError.image_url && (
+                <div className="relative w-full h-96 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border">
+                  <Image
+                    src={selectedError.image_url}
+                    alt="Error"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              )}
+
+              {selectedError.explanation && (
+                <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                  {selectedError.explanation}
+                </p>
+              )}
+
+              <div className="flex gap-4 text-sm">
+                <div>
+                  <span className="text-slate-500">Niveau:</span>{' '}
+                  <span className="font-medium">{selectedError.mastery_level}/5</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">Révisions:</span>{' '}
+                  <span className="font-medium">{selectedError.review_count}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="destructive"
+                  onClick={() => handleReview(false)}
+                  disabled={updating}
+                  className="flex-1"
+                >
+                  {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => handleReview(true)}
+                  disabled={updating}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+    </div>
+  )
+}
+
+
