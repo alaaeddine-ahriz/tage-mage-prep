@@ -16,10 +16,24 @@ import { Plus, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 
+interface Notion {
+  id: string
+  title: string
+  description?: string
+  subtest: string
+  mastery_level: number
+  review_count: number
+  next_review_at: string
+  last_reviewed_at?: string
+  user_id: string
+  created_at: string
+  updated_at: string
+}
+
 export default function NotionsPage() {
-  const [notions, setNotions] = useState<any[]>([])
+  const [notions, setNotions] = useState<Notion[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedNotion, setSelectedNotion] = useState<any>(null)
+  const [selectedNotion, setSelectedNotion] = useState<Notion | null>(null)
   const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
@@ -46,12 +60,10 @@ export default function NotionsPage() {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const notionsDue = notions.filter((n: any) => isDueForReview(n.next_review_at))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const notionsUpcoming = notions.filter((n: any) => !isDueForReview(n.next_review_at))
+  const notionsDue = notions.filter((n) => isDueForReview(n.next_review_at))
+  const notionsUpcoming = notions.filter((n) => !isDueForReview(n.next_review_at))
 
-  const openNotionModal = (notion: any) => {
+  const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
   }
 
@@ -156,8 +168,7 @@ export default function NotionsPage() {
           <TrendingUp className="h-3.5 w-3.5 text-green-600" />
           <span className="text-lg font-bold text-green-600">
             {notions && notions.length > 0
-              ? /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-              (notions.reduce((acc: number, n: any) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
+              ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
               : '0.0'}
           </span>
         </div>
@@ -170,8 +181,7 @@ export default function NotionsPage() {
             À réviser maintenant ({notionsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {notionsDue.map((notion: any, index: number) => (
+            {notionsDue.map((notion) => (
               <div
                 key={notion.id}
                 className="group relative h-48 w-full overflow-hidden rounded-lg border-2 border-orange-200 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-100 dark:from-orange-950 dark:via-orange-900 dark:to-amber-950 p-4 text-left transition-all hover:shadow-lg dark:border-orange-900">
@@ -228,8 +238,7 @@ export default function NotionsPage() {
             Prochaines révisions ({notionsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {notionsUpcoming.map((notion: any, index: number) => (
+            {notionsUpcoming.map((notion) => (
               <div key={notion.id} className="relative h-48 w-full overflow-hidden rounded-lg border transition-all hover:shadow-md">
                   {/* Background dégradé */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950" />

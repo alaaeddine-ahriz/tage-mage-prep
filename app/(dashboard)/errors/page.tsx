@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -78,7 +76,7 @@ export default function ErrorsPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : errorsUpcoming.filter((e: any) => e.subtest === filter)
 
-  const openErrorModal = (error: any) => {
+  const openErrorModal = (error: unknown) => {
     setSelectedError(error)
   }
 
@@ -210,7 +208,7 @@ export default function ErrorsPage() {
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {filteredErrorsDue.map((error: any, index: number) => (
+            {filteredErrorsDue.map((error: any) => (
               <div
                 key={error.id}
                 style={{
@@ -280,7 +278,7 @@ export default function ErrorsPage() {
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {filteredErrorsUpcoming.map((error: any, index: number) => (
+            {filteredErrorsUpcoming.map((error: any) => (
               <div
                 key={error.id}
                 className="relative h-48 w-full overflow-hidden rounded-lg border transition-all hover:shadow-md"
