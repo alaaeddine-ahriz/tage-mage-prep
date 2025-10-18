@@ -5,16 +5,34 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
+import { MobileCarousel } from '@/components/ui/mobile-carousel'
+import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { AddNotionForm } from '@/components/forms/AddNotionForm'
 import { Plus, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
+
+const SUBTESTS = [
+  { value: 'all', label: 'Tous' },
+  { value: 'calcul', label: 'Calcul' },
+  { value: 'logique', label: 'Logique' },
+  { value: 'expression', label: 'Expression' },
+  { value: 'comprehension', label: 'Compréhension' },
+  { value: 'conditions', label: 'Conditions' },
+]
 
 interface Notion {
   id: string
@@ -34,7 +52,11 @@ export default function NotionsPage() {
   const [notions, setNotions] = useState<Notion[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedNotion, setSelectedNotion] = useState<Notion | null>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [filter, setFilter] = useState('all')
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     loadNotions()
@@ -60,16 +82,31 @@ export default function NotionsPage() {
     }
   }
 
-  const notionsDue = notions.filter((n) => isDueForReview(n.next_review_at))
-  const notionsUpcoming = notions.filter((n) => !isDueForReview(n.next_review_at))
+  const handleFormSuccess = () => {
+    loadNotions()
+    setIsFormOpen(false)
+  }
+
+  // Filter notions by subtest
+  const filteredNotions = filter === 'all' 
+    ? notions 
+    : notions.filter((n) => n.subtest === filter)
+
+  const notionsDue = filteredNotions.filter((n) => isDueForReview(n.next_review_at))
+  const notionsUpcoming = filteredNotions.filter((n) => !isDueForReview(n.next_review_at))
 
   const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
+    // Find index in the combined list for carousel
+    const allNotions = [...notionsDue, ...notionsUpcoming]
+    const index = allNotions.findIndex(n => n.id === notion.id)
+    setCurrentIndex(index >= 0 ? index : 0)
   }
 
 
-  const handleReview = async (success: boolean) => {
-    if (!selectedNotion) return
+  const handleReview = async (success: boolean, notionToReview?: Notion) => {
+    const notion = notionToReview || selectedNotion
+    if (!notion) return
     setUpdating(true)
 
     try {
@@ -78,7 +115,7 @@ export default function NotionsPage() {
       
       if (!user) throw new Error('Not authenticated')
 
-      const currentLevel = selectedNotion.mastery_level || 0
+      const currentLevel = notion.mastery_level || 0
       const newMasteryLevel = updateMasteryLevel(currentLevel, success)
       const nextReviewDate = calculateNextReviewDate(newMasteryLevel)
       const intervalDays = getNextReviewInterval(newMasteryLevel)
@@ -90,16 +127,16 @@ export default function NotionsPage() {
           mastery_level: newMasteryLevel,
           last_reviewed_at: new Date().toISOString(),
           next_review_at: nextReviewDate.toISOString(),
-          review_count: (selectedNotion.review_count || 0) + 1,
+          review_count: (notion.review_count || 0) + 1,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', selectedNotion.id)
+        .eq('id', notion.id)
 
       if (updateError) throw updateError
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from('notion_reviews').insert({
-        notion_id: selectedNotion.id,
+        notion_id: notion.id,
         user_id: user.id,
         success,
         new_mastery_level: newMasteryLevel,
@@ -112,9 +149,13 @@ export default function NotionsPage() {
           : 'On révise demain !'
       )
 
-      // Reload notions and close modal
+      // Reload notions
       await loadNotions()
-      setSelectedNotion(null)
+      
+      // In mobile carousel, don't close - just stay on same index
+      if (!isMobile) {
+        setSelectedNotion(null)
+      }
     } catch (error) {
       console.error('Error updating:', error)
       toast.error('Erreur lors de la mise à jour')
@@ -132,47 +173,103 @@ export default function NotionsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Notions
-        </h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Notions
+          </h1>
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Ajouter
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Nouvelle notion</DialogTitle>
-            </DialogHeader>
-            <AddNotionForm onSuccess={loadNotions} />
-          </DialogContent>
-        </Dialog>
+          {!isMobile && (
+            <MobileFormSheet
+              open={isFormOpen}
+              onOpenChange={setIsFormOpen}
+              title="Nouvelle notion"
+              trigger={
+                <Button onClick={() => setIsFormOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter
+                </Button>
+              }
+            >
+              <AddNotionForm onSuccess={handleFormSuccess} />
+            </MobileFormSheet>
+          )}
+        </div>
+
+        {/* Filtres + Bouton - Mobile */}
+        {isMobile && (
+          <div className="flex gap-2">
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Sous-test" />
+              </SelectTrigger>
+              <SelectContent>
+                {SUBTESTS.map((subtest) => (
+                  <SelectItem key={subtest.value} value={subtest.value}>
+                    {subtest.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <MobileFormSheet
+              open={isFormOpen}
+              onOpenChange={setIsFormOpen}
+              title="Nouvelle notion"
+              trigger={
+                <Button onClick={() => setIsFormOpen(true)} size="icon" className="shrink-0">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              }
+            >
+              <AddNotionForm onSuccess={handleFormSuccess} />
+            </MobileFormSheet>
+          </div>
+        )}
+
+        {/* Filtres - Desktop */}
+        {!isMobile && notions.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {SUBTESTS.map((subtest) => (
+              <button
+                key={subtest.value}
+                onClick={() => setFilter(subtest.value)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  filter === subtest.value
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                }`}
+              >
+                {subtest.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Stats compactes */}
-      <div className="flex gap-2">
-        <div className="flex items-center gap-1.5 rounded-md border bg-slate-50 px-3 py-1.5 dark:bg-slate-900">
-          <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
-          <span className="text-lg font-bold">{notions?.length || 0}</span>
+      {/* Stats compactes - Desktop only */}
+      {!isMobile && (
+        <div className="flex gap-2">
+          <div className="flex items-center gap-1.5 rounded-md border bg-slate-50 px-3 py-1.5 dark:bg-slate-900">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+            <span className="text-lg font-bold">{notions?.length || 0}</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-3 py-1.5 dark:border-orange-900/50 dark:bg-orange-950/50">
+            <Clock className="h-3.5 w-3.5 text-orange-600" />
+            <span className="text-lg font-bold text-orange-600">{notionsDue.length}</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 dark:border-green-900/50 dark:bg-green-950/50">
+            <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+            <span className="text-lg font-bold text-green-600">
+              {notions && notions.length > 0
+                ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
+                : '0.0'}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-3 py-1.5 dark:border-orange-900/50 dark:bg-orange-950/50">
-          <Clock className="h-3.5 w-3.5 text-orange-600" />
-          <span className="text-lg font-bold text-orange-600">{notionsDue.length}</span>
-        </div>
-        <div className="flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 dark:border-green-900/50 dark:bg-green-950/50">
-          <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-lg font-bold text-green-600">
-            {notions && notions.length > 0
-              ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
-              : '0.0'}
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Notions to Review */}
       {notionsDue.length > 0 && (
@@ -304,60 +401,164 @@ export default function NotionsPage() {
         </Card>
       )}
 
-      {/* Review Modal */}
-      <Dialog open={!!selectedNotion} onOpenChange={(open) => {
-        if (!open) setSelectedNotion(null)
-      }}>
-        {selectedNotion && (
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-sm capitalize text-slate-600 dark:text-slate-400">
-                {selectedNotion.subtest}
-              </DialogTitle>
-            </DialogHeader>
+      {/* Review Modal - Desktop */}
+      {!isMobile && (
+        <Dialog open={!!selectedNotion} onOpenChange={(open) => {
+          if (!open) setSelectedNotion(null)
+        }}>
+          {selectedNotion && (
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="text-sm capitalize text-slate-600 dark:text-slate-400">
+                  {selectedNotion.subtest}
+                </DialogTitle>
+              </DialogHeader>
 
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">{selectedNotion.title}</h2>
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold">{selectedNotion.title}</h2>
 
-              {selectedNotion.description && (
-                <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
-                  {selectedNotion.description}
-                </p>
-              )}
+                {selectedNotion.description && (
+                  <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                    {selectedNotion.description}
+                  </p>
+                )}
 
-              <div className="flex gap-4 text-sm">
-                <div>
-                  <span className="text-slate-500">Niveau:</span>{' '}
-                  <span className="font-medium">{selectedNotion.mastery_level}/5</span>
+                <div className="flex gap-4 text-sm">
+                  <div>
+                    <span className="text-slate-500">Niveau:</span>{' '}
+                    <span className="font-medium">{selectedNotion.mastery_level}/5</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Révisions:</span>{' '}
+                    <span className="font-medium">{selectedNotion.review_count}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-500">Révisions:</span>{' '}
-                  <span className="font-medium">{selectedNotion.review_count}</span>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleReview(false)}
+                    disabled={updating}
+                    className="flex-1"
+                  >
+                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={() => handleReview(true)}
+                    disabled={updating}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
+                  </Button>
                 </div>
               </div>
+            </DialogContent>
+          )}
+        </Dialog>
+      )}
 
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="destructive"
-                  onClick={() => handleReview(false)}
-                  disabled={updating}
-                  className="flex-1"
-                >
-                  {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={() => handleReview(true)}
-                  disabled={updating}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
-                </Button>
+      {/* Review Carousel - Mobile */}
+      {isMobile && (
+        <MobileCarousel
+          isOpen={!!selectedNotion}
+          onClose={() => setSelectedNotion(null)}
+          items={[...notionsDue, ...notionsUpcoming]}
+          currentIndex={currentIndex}
+          onIndexChange={(index) => {
+            setCurrentIndex(index)
+            const allNotions = [...notionsDue, ...notionsUpcoming]
+            setSelectedNotion(allNotions[index])
+          }}
+          hideNavigation={true}
+        >
+          {(item) => {
+            const notion = item as Notion
+            return (
+              <div className="space-y-6 pb-32">
+                {/* Badge subtest */}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium capitalize text-primary">
+                    {notion.subtest}
+                  </span>
+                  {isDueForReview(notion.next_review_at) && (
+                    <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                      <Clock className="mr-1.5 h-3.5 w-3.5" />
+                      À réviser
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {notion.title}
+                </h2>
+
+                {/* Description */}
+                {notion.description && (
+                  <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-900">
+                    <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                      {notion.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Compact Stats */}
+                <div className="rounded-lg border bg-card p-3">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    {/* Mastery */}
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Maîtrise</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-xl font-bold">{notion.mastery_level}</span>
+                        <span className="text-sm text-muted-foreground">/5</span>
+                      </div>
+                    </div>
+                    {/* Reviews */}
+                    <div className="border-x px-2">
+                      <p className="text-xs text-muted-foreground mb-1">Révisions</p>
+                      <p className="text-xl font-bold">{notion.review_count}</p>
+                    </div>
+                    {/* Next review */}
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Prochaine</p>
+                      <p className="text-sm font-semibold text-primary">
+                        {new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
+            )
+          }}
+        </MobileCarousel>
+      )}
+
+      {/* Fixed Action Buttons - Mobile */}
+      {isMobile && selectedNotion && (
+        <div className="fixed bottom-16 left-0 right-0 bg-background border-t p-3 z-[60]">
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              onClick={() => handleReview(false, selectedNotion)}
+              disabled={updating}
+              className="flex-1 h-14 text-base font-semibold"
+            >
+              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : '😕 Oublié'}
+            </Button>
+            <Button
+              onClick={() => handleReview(true, selectedNotion)}
+              disabled={updating}
+              className="flex-1 h-14 text-base font-semibold bg-green-600 hover:bg-green-700"
+            >
+              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : '🎯 Je sais!'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
