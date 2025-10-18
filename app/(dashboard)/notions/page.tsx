@@ -475,60 +475,56 @@ export default function NotionsPage() {
           {(item) => {
             const notion = item as Notion
             return (
-              <div className="space-y-6 pb-32">
+              <div className="space-y-8 pb-32">
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium capitalize text-primary">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-primary text-primary-foreground">
                     {notion.subtest}
                   </span>
                   {isDueForReview(notion.next_review_at) && (
-                    <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                      <Clock className="mr-1.5 h-3.5 w-3.5" />
+                    <span className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400">
+                      <Clock className="h-3 w-3" />
                       À réviser
                     </span>
                   )}
                 </div>
 
                 {/* Title */}
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-foreground leading-tight">
                   {notion.title}
                 </h2>
 
                 {/* Description */}
                 {notion.description && (
-                  <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-900">
-                    <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                      {notion.description}
-                    </p>
+                  <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {notion.description}
                   </div>
                 )}
 
                 {/* Compact Stats */}
-                <div className="rounded-lg border bg-card p-3">
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    {/* Mastery */}
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Maîtrise</p>
-                      <div className="flex items-center justify-center gap-1">
-                        <span className="text-xl font-bold">{notion.mastery_level}</span>
-                        <span className="text-sm text-muted-foreground">/5</span>
-                      </div>
+                <div className="grid grid-cols-3 gap-6">
+                  {/* Mastery */}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Maîtrise</p>
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="text-3xl font-bold text-foreground">{notion.mastery_level}</span>
+                      <span className="text-sm text-muted-foreground">/5</span>
                     </div>
-                    {/* Reviews */}
-                    <div className="border-x px-2">
-                      <p className="text-xs text-muted-foreground mb-1">Révisions</p>
-                      <p className="text-xl font-bold">{notion.review_count}</p>
-                    </div>
-                    {/* Next review */}
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Prochaine</p>
-                      <p className="text-sm font-semibold text-primary">
-                        {new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </p>
-                    </div>
+                  </div>
+                  {/* Reviews */}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Révisions</p>
+                    <p className="text-3xl font-bold text-foreground">{notion.review_count}</p>
+                  </div>
+                  {/* Next review */}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Prochaine</p>
+                    <p className="text-3xl font-bold text-primary">
+                      {new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short'
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -539,20 +535,20 @@ export default function NotionsPage() {
 
       {/* Fixed Action Buttons - Mobile */}
       {isMobile && selectedNotion && (
-        <div className="fixed bottom-16 left-0 right-0 bg-background border-t p-3 z-[60]">
+        <div className="fixed bottom-16 left-0 right-0 p-8 z-[60]">
           <div className="flex gap-3">
             <Button
               variant="destructive"
               onClick={() => handleReview(false, selectedNotion)}
               disabled={updating}
-              className="flex-1 h-14 text-base font-semibold"
+              className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg"
             >
               {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : '😕 Oublié'}
             </Button>
             <Button
               onClick={() => handleReview(true, selectedNotion)}
               disabled={updating}
-              className="flex-1 h-14 text-base font-semibold bg-green-600 hover:bg-green-700"
+              className="flex-1 h-14 text-base font-semibold bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg"
             >
               {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : '🎯 Je sais!'}
             </Button>
