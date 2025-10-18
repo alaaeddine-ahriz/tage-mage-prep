@@ -506,7 +506,6 @@ export default function ErrorsPage() {
           }}
           hideNavigation={true}
         >
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {(item) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const error = item as any

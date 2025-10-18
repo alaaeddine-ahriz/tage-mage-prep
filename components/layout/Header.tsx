@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { signOut } from '@/lib/supabase/auth'
-import { LogOut, Moon, Sun, User } from 'lucide-react'
+import { LogOut, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 

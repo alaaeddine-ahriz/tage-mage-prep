@@ -16,6 +16,7 @@ import { AddTestForm } from '@/components/forms/AddTestForm'
 import { Plus, Loader2, TrendingUp, Target } from 'lucide-react'
 import { ProgressChart } from '@/components/charts/ProgressChart'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { Test } from '@/lib/types/database.types'
 
 const SUBTESTS = [
   { value: 'all', label: 'Tous' },
@@ -33,8 +34,7 @@ const TEST_TYPES = [
 ]
 
 export default function TestsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [tests, setTests] = useState<any[]>([])
+  const [tests, setTests] = useState<Test[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [subtestFilter, setSubtestFilter] = useState('all')
@@ -50,14 +50,13 @@ export default function TestsPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('tests')
         .select('*')
         .eq('user_id', user!.id)
         .order('date', { ascending: false })
 
-      setTests(data || [])
+      setTests((data as Test[]) || [])
     } catch (error) {
       console.error('Error loading tests:', error)
     } finally {
@@ -99,9 +98,8 @@ export default function TestsPage() {
   }, {} as Record<string, { count: number; totalScore: number; bestScore: number; lastScore: number }>)
 
   // Calculate overall average
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const overallAverage = tests.length > 0 
-    ? tests.reduce((sum: number, test: any) => sum + test.score, 0) / tests.length
+    ? tests.reduce((sum: number, test: Test) => sum + test.score, 0) / tests.length
     : 0
 
   if (loading) {
@@ -230,7 +228,7 @@ export default function TestsPage() {
               <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
                 <Target className="h-3.5 w-3.5 text-green-600" />
                 <span className="text-base font-bold text-green-600">
-                  {Math.max(...tests.map((t: any) => t.score))}
+                  {Math.max(...tests.map((t: Test) => t.score))}
                 </span>
               </div>
             </div>
