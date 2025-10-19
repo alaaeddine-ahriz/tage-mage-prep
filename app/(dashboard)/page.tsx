@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Target, TrendingUp, AlertCircle, Brain, Calendar, Loader2 } from 'lucide-react'
+import { Target, TrendingUp, AlertCircle, Brain, Calendar, Loader2, LogOut, Moon, Sun, Monitor } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
 import { Notion, Error as ErrorType } from '@/lib/types/database.types'
+import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
+import { signOut } from '@/lib/supabase/auth'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 interface Test {
   id: string
@@ -22,6 +26,9 @@ export default function ProfilePage() {
   const [notionsDue, setNotionsDue] = useState<Notion[]>([])
   const [notions, setNotions] = useState<Notion[]>([])
   const [userEmail, setUserEmail] = useState<string>('Utilisateur')
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const router = useRouter()
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     loadData()
@@ -71,6 +78,22 @@ export default function ProfilePage() {
   const mastered = notions.filter((n) => n.mastery_level >= 4).length
   const masteryPct = notions.length > 0 ? Math.round((mastered / notions.length) * 100) : 0
 
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  const handleThemeToggle = () => {
+    if (theme === 'system') {
+      setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+    } else {
+      setTheme(theme === 'dark' ? 'light' : 'dark')
+    }
+  }
+
+  const isDarkMode = resolvedTheme === 'dark'
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -96,11 +119,43 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats principales */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Stat label="Score moyen" value={`${averageScore}/15`} icon={<Target className="h-4 w-4 text-primary" />} />
-          <Stat label="Tests" value={tests.length} icon={<TrendingUp className="h-4 w-4 text-primary" />} />
-          <Stat label="Erreurs à réviser" value={errorsDue.length} icon={<AlertCircle className="h-4 w-4 text-primary" />} />
-          <Stat label="Notions à réviser" value={notionsDue.length} icon={<Brain className="h-4 w-4 text-primary" />} />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Score moyen
+              </div>
+              <div className="text-2xl font-bold text-foreground">{averageScore}/15</div>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Tests
+              </div>
+              <div className="text-2xl font-bold text-foreground">{tests.length}</div>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Erreurs
+              </div>
+              <div className="text-2xl font-bold text-primary">{errorsDue.length}</div>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Notions
+              </div>
+              <div className="text-2xl font-bold text-primary">{notionsDue.length}</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -141,6 +196,37 @@ export default function ProfilePage() {
           <h3 className="text-base font-semibold text-foreground">Commencez votre préparation</h3>
           <p className="mt-1 text-sm text-muted-foreground">Ajoutez vos premiers tests, erreurs et notions</p>
           <Button className="mt-4">Ajouter un test</Button>
+        </div>
+      )}
+
+      {/* Mobile: Theme Toggle & Sign Out - At the bottom */}
+      {isMobile && (
+        <div className="flex gap-3">
+          <Button
+            onClick={handleThemeToggle}
+            variant="outline"
+            className="flex-1 h-12 rounded-xl"
+          >
+            {isDarkMode ? (
+              <>
+                <Sun className="h-5 w-5 mr-2" />
+                Mode clair
+              </>
+            ) : (
+              <>
+                <Moon className="h-5 w-5 mr-2" />
+                Mode sombre
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleSignOut}
+            variant="destructive"
+            className="flex-1 h-12 rounded-xl"
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            Déconnexion
+          </Button>
         </div>
       )}
     </div>

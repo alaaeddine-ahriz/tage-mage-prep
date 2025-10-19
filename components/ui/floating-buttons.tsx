@@ -26,8 +26,8 @@ interface FloatingButtonProps extends Omit<React.ComponentProps<typeof Button>, 
 export function FloatingButton({ className, variant = 'default', ...props }: FloatingButtonProps) {
   const variantStyles: Record<string, string> = {
     default: 'backdrop-blur-xl bg-primary/85 hover:bg-primary/95 border border-primary-foreground/10 text-primary-foreground',
-    destructive: 'backdrop-blur-xl bg-destructive/85 hover:bg-destructive/95 border border-destructive-foreground/10 text-destructive-foreground',
-    success: 'backdrop-blur-xl bg-success/85 hover:bg-success/95 border border-success-foreground/10 text-success-foreground',
+    destructive: 'backdrop-blur-xl bg-destructive/70 hover:bg-destructive/85 border border-white/20 text-white',
+    success: 'backdrop-blur-xl bg-success/70 hover:bg-success/85 border border-white/20 text-white',
     outline: 'backdrop-blur-xl bg-background/85 hover:bg-background/95 border border-border',
   }
 

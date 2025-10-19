@@ -229,24 +229,39 @@ export default function NotionsPage() {
         )}
       </div>
 
-      {/* Stats compactes - Desktop only */}
+      {/* Stats modernes - Desktop only */}
       {!isMobile && (
-        <div className="flex gap-2">
-          <div className="flex items-center gap-1.5 rounded-md border bg-muted px-3 py-1.5">
-            <span className="text-xs text-muted-foreground">Total</span>
-            <span className="text-lg font-bold">{notions?.length || 0}</span>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Total
+              </div>
+              <div className="text-2xl font-bold text-foreground">{notions?.length || 0}</div>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-3 py-1.5">
-            <Clock className="h-3.5 w-3.5 text-primary" />
-            <span className="text-lg font-bold text-primary">{notionsDue.length}</span>
+          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                À réviser
+              </div>
+              <div className="text-2xl font-bold text-primary">{notionsDue.length}</div>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-3 py-1.5">
-            <TrendingUp className="h-3.5 w-3.5 text-primary" />
-            <span className="text-lg font-bold text-primary">
-              {notions && notions.length > 0
-                ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
-                : '0.0'}
-            </span>
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Niveau moyen
+              </div>
+              <div className="text-2xl font-bold text-foreground">
+                {notions && notions.length > 0
+                  ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
+                  : '0.0'}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -491,30 +506,39 @@ export default function NotionsPage() {
                   </div>
                 )}
 
-                {/* Compact Stats */}
-                <div className="grid grid-cols-3 gap-6">
-                  {/* Mastery */}
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Maîtrise</p>
-                    <div className="flex items-baseline gap-0.5">
-                      <span className="text-3xl font-bold text-foreground">{notion.mastery_level}</span>
-                      <span className="text-sm text-muted-foreground">/5</span>
+                {/* Stats modernes */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+                    <div className="relative">
+                      <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                        Maîtrise
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">{notion.mastery_level}/5</div>
                     </div>
                   </div>
-                  {/* Reviews */}
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Révisions</p>
-                    <p className="text-3xl font-bold text-foreground">{notion.review_count}</p>
+                  <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+                    <div className="relative">
+                      <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                        Révisions
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">{notion.review_count}</div>
+                    </div>
                   </div>
-                  {/* Next review */}
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Prochaine</p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {notion.next_review_at ? new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short'
-                      }) : 'N/A'}
-                    </p>
+                  <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+                    <div className="relative">
+                      <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                        Prochaine
+                      </div>
+                      <div className="text-2xl font-bold text-primary">
+                        {notion.next_review_at ? new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short'
+                        }) : 'N/A'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

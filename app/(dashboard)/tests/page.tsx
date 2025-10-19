@@ -245,22 +245,16 @@ export default function TestsPage() {
 
         {/* Tabs selector - Mobile uniquement, juste sous le titre */}
         {isMobile && (tests.length > 0 || fullTests.length > 0) && (
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button
-              variant={activeTab === 'individual' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('individual')}
-              className="flex-1"
-            >
-              Individuels ({tests.length})
-            </Button>
-            <Button
-              variant={activeTab === 'full' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('full')}
-              className="flex-1"
-            >
-              Complets ({fullTests.length})
-            </Button>
-          </div>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'individual' | 'full')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="individual">
+                Individuels ({tests.length})
+              </TabsTrigger>
+              <TabsTrigger value="full">
+                Complets ({fullTests.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         )}
 
         {/* Filters - Mobile sous les tabs */}

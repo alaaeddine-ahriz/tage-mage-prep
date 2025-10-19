@@ -1,6 +1,6 @@
 {
-  "name": "Tage Mage Tracker",
-  "short_name": "TM Tracker",
+  "name": "Tage Mage Prep",
+  "short_name": "TM Prep",
   "description": "Suivez votre préparation au Tage Mage",
   "start_url": "/",
   "display": "standalone",
@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

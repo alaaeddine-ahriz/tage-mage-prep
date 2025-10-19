@@ -240,20 +240,35 @@ export default function ErrorsPage() {
         )}
       </div>
 
-      {/* Stats compactes - Desktop only */}
+      {/* Stats modernes - Desktop only */}
       {!isMobile && (
-        <div className="flex gap-2">
-          <div className="flex items-center gap-1.5 rounded-md border bg-muted px-3 py-1.5">
-            <span className="text-xs text-muted-foreground">Total</span>
-            <span className="text-lg font-bold">{errors.length}</span>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Total
+              </div>
+              <div className="text-2xl font-bold text-foreground">{errors.length}</div>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-3 py-1.5">
-            <Clock className="h-3.5 w-3.5 text-primary" />
-            <span className="text-lg font-bold text-primary">{errorsDue.length}</span>
+          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                À réviser
+              </div>
+              <div className="text-2xl font-bold text-primary">{errorsDue.length}</div>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-3 py-1.5">
-            <CheckCircle className="h-3.5 w-3.5 text-primary" />
-            <span className="text-lg font-bold text-primary">{errorsMastered.length}</span>
+          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+            <div className="relative">
+              <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                Maîtrisées
+              </div>
+              <div className="text-2xl font-bold text-foreground">{errorsMastered.length}</div>
+            </div>
           </div>
         </div>
       )}
@@ -575,30 +590,39 @@ export default function ErrorsPage() {
                   </>
                 )}
 
-                {/* Compact Stats */}
-                <div className="grid grid-cols-3 gap-6">
-                  {/* Mastery */}
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Maîtrise</p>
-                    <div className="flex items-baseline gap-0.5">
-                      <span className="text-3xl font-bold text-foreground">{error.mastery_level}</span>
-                      <span className="text-sm text-muted-foreground">/5</span>
+                {/* Stats modernes */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+                    <div className="relative">
+                      <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                        Maîtrise
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">{error.mastery_level}/5</div>
                     </div>
                   </div>
-                  {/* Reviews */}
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Révisions</p>
-                    <p className="text-3xl font-bold text-foreground">{error.review_count}</p>
+                  <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+                    <div className="relative">
+                      <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                        Révisions
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">{error.review_count}</div>
+                    </div>
                   </div>
-                  {/* Next review */}
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Prochaine</p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {new Date(error.next_review_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short'
-                      })}
-                    </p>
+                  <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+                    <div className="relative">
+                      <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                        Prochaine
+                      </div>
+                      <div className="text-2xl font-bold text-primary">
+                        {new Date(error.next_review_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short'
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
