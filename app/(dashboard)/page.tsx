@@ -5,8 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Target, TrendingUp, AlertCircle, Brain, Calendar, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
-
-import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { Notion, Error as ErrorType } from '@/lib/types/database.types'
 
 interface Test {

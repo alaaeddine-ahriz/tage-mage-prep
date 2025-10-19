@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Loader2, Plus, TrendingUp, X } from 'lucide-react'
-import { TestWithAttempts } from '@/lib/types/database.types'
+import { TestWithAttempts, TestAttempt } from '@/lib/types/database.types'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
@@ -19,6 +19,8 @@ interface TestAttemptsModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
+
+type AttemptWithFlag = (TestWithAttempts | TestAttempt) & { is_original?: boolean }
 
 export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestAttemptsModalProps) {
   const isMobile = useIsMobile()
@@ -86,9 +88,9 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
 
   if (!test) return null
 
-  const allAttempts = [
+  const allAttempts: AttemptWithFlag[] = [
     { ...test, is_original: true },
-    ...test.attempts
+    ...test.attempts.map(a => ({ ...a, is_original: false }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const bestScore = Math.max(...allAttempts.map(a => a.score))

@@ -20,7 +20,7 @@ import { FullTestAttemptsModal } from '@/components/dashboard/FullTestAttemptsMo
 import { Plus, Loader2, TrendingUp, Target } from 'lucide-react'
 import { ProgressChart } from '@/components/charts/ProgressChart'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-import { Test, FullTestWithSubtests, TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
+import { Test, TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 
 const TEST_TYPES = [
@@ -451,7 +451,6 @@ export default function TestsPage() {
               </h2>
               {filteredTests.length > 0 ? (
                 <div className="divide-y divide-border">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {filteredTests.map((test: TestWithAttempts) => (
                     <div 
                       key={test.id} 
