@@ -11,12 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
 
@@ -26,6 +26,7 @@ interface AddTestFormProps {
 
 export function AddTestForm({ onSuccess }: AddTestFormProps) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -86,7 +87,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-4 pb-32">
+    <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'pb-32' : ''}`}>
       <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
         <Input
@@ -127,7 +128,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
           onValueChange={(value) => setFormData({ ...formData, subtest: value })}
           required
         >
-          <SelectTrigger id="subtest">
+          <SelectTrigger id="subtest" className="w-full">
             <SelectValue placeholder="Sélectionner un sous-test" />
           </SelectTrigger>
           <SelectContent>
@@ -168,25 +169,32 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes (optionnel)</Label>
-        <Textarea
+        <Input
           id="notes"
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Commentaires sur ce test..."
-          rows={3}
         />
       </div>
 
+      {!isMobile && (
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="submit" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enregistrer
+          </Button>
+        </div>
+      )}
     </form>
     
-    <FloatingButtonsContainer>
-      <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-        Enregistrer
-      </FloatingButton>
-    </FloatingButtonsContainer>
+    {isMobile && (
+      <FloatingButtonsContainer>
+        <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+          Enregistrer
+        </FloatingButton>
+      </FloatingButtonsContainer>
+    )}
     </>
   )
 }
-
-

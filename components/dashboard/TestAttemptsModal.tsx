@@ -229,35 +229,71 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
     </>
   )
 
-  const footerView = (
-    <>
-      {!showAddForm ? (
-        <FloatingButton onClick={() => setShowAddForm(true)} className="w-full">
-          <Plus className="mr-2 h-5 w-5" />
-          Ajouter un score
-        </FloatingButton>
-      ) : (
+  const renderFooter = (mobile: boolean) => {
+    if (mobile) {
+      return (
         <>
-          <FloatingButton
-            type="button"
-            onClick={handleAddAttempt}
-            disabled={loading || !newAttempt.score}
-          >
-            {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-            Enregistrer
-          </FloatingButton>
-          <FloatingButton
-            type="button"
-            variant="outline"
-            onClick={() => setShowAddForm(false)}
-            disabled={loading}
-          >
-            Annuler
-          </FloatingButton>
+          {!showAddForm ? (
+            <FloatingButton onClick={() => setShowAddForm(true)} className="w-full">
+              <Plus className="mr-2 h-5 w-5" />
+              Ajouter un score
+            </FloatingButton>
+          ) : (
+            <>
+              <FloatingButton
+                type="button"
+                onClick={handleAddAttempt}
+                disabled={loading || !newAttempt.score}
+              >
+                {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                Enregistrer
+              </FloatingButton>
+              <FloatingButton
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddForm(false)}
+                disabled={loading}
+              >
+                Annuler
+              </FloatingButton>
+            </>
+          )}
         </>
-      )}
-    </>
-  )
+      )
+    }
+
+    if (!showAddForm) {
+      return (
+        <div className="flex justify-end gap-3">
+          <Button type="button" onClick={() => setShowAddForm(true)} disabled={loading}>
+            <Plus className="mr-2 h-4 w-4" />
+            Ajouter un score
+          </Button>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex justify-end gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowAddForm(false)}
+          disabled={loading}
+        >
+          Annuler
+        </Button>
+        <Button
+          type="button"
+          onClick={handleAddAttempt}
+          disabled={loading || !newAttempt.score}
+        >
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Enregistrer
+        </Button>
+      </div>
+    )
+  }
 
   // Desktop: Use Dialog
   if (!isMobile) {
@@ -271,7 +307,7 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
           </DialogHeader>
           <div className="space-y-4">
             {contentView}
-            {footerView}
+            {renderFooter(false)}
           </div>
         </DialogContent>
       </Dialog>
@@ -307,9 +343,8 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
 
       {/* Footer - Flottant au dessus de la navbar */}
       <FloatingButtonsContainer>
-        {footerView}
+        {renderFooter(true)}
       </FloatingButtonsContainer>
     </div>
   )
 }
-

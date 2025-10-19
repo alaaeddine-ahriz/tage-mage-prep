@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 const FULL_TEST_SUBTESTS = [
   { key: 'comprehension', label: 'CDT' },
@@ -36,6 +36,7 @@ interface AddFullTestFormProps {
 
 export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProps) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: existingTest?.name || '',
@@ -168,7 +169,7 @@ export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProp
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-4 pb-32">
+    <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'pb-32' : ''}`}>
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-foreground">Nom du test</h3>
         <Input
@@ -225,24 +226,32 @@ export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProp
 
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-foreground">Notes (optionnel)</h3>
-        <Textarea
+        <Input
           id="notes"
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Commentaires sur ce test..."
-          rows={3}
         />
       </div>
 
+      {!isMobile && (
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="submit" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enregistrer
+          </Button>
+        </div>
+      )}
     </form>
     
-    <FloatingButtonsContainer>
-      <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-        Enregistrer
-      </FloatingButton>
-    </FloatingButtonsContainer>
+    {isMobile && (
+      <FloatingButtonsContainer>
+        <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+          Enregistrer
+        </FloatingButton>
+      </FloatingButtonsContainer>
+    )}
     </>
   )
 }
-

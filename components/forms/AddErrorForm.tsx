@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -10,13 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage, validateImageFile } from '@/lib/utils/image-compression'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Image as ImageIcon, Loader2, X } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
 
@@ -26,6 +27,7 @@ interface AddErrorFormProps {
 
 export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -144,7 +146,7 @@ export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-4 pb-32">
+    <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'pb-32' : ''}`}>
       {/* Image Upload */}
       <div className="space-y-2">
         <Label>Photo (optionnel)</Label>
@@ -195,7 +197,7 @@ export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
           onValueChange={(value) => setFormData({ ...formData, subtest: value })}
           required
         >
-          <SelectTrigger id="subtest">
+          <SelectTrigger id="subtest" className="w-full">
             <SelectValue placeholder="Sélectionner..." />
           </SelectTrigger>
           <SelectContent>
@@ -210,27 +212,35 @@ export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="description">Description (optionnel)</Label>
-        <Textarea
+        <Input
           id="description"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Ex: Problème de calcul mental sur les fractions..."
-          rows={4}
         />
         <p className="text-xs text-muted-foreground">
           Photo ou description requise
         </p>
       </div>
 
+      {!isMobile && (
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="submit" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enregistrer
+          </Button>
+        </div>
+      )}
     </form>
     
-    <FloatingButtonsContainer>
-      <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-        Enregistrer
-      </FloatingButton>
-    </FloatingButtonsContainer>
+    {isMobile && (
+      <FloatingButtonsContainer>
+        <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+          Enregistrer
+        </FloatingButton>
+      </FloatingButtonsContainer>
+    )}
     </>
   )
 }
-
