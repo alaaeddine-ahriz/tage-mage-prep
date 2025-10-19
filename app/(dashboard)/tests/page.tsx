@@ -30,7 +30,7 @@ const SUBTESTS = [
 const TEST_TYPES = [
   { value: 'all', label: 'Tous' },
   { value: 'TD', label: 'TD' },
-  { value: 'blanc', label: 'Blanc' },
+  { value: 'Blanc', label: 'Blanc' },
 ]
 
 export default function TestsPage() {
@@ -299,7 +299,7 @@ export default function TestsPage() {
                       </span>
                       <span className="text-xs text-muted-foreground">•</span>
                       <span className={`text-xs font-medium ${
-                        test.type === 'blanc' 
+                        test.type === 'Blanc' 
                           ? 'text-primary'
                           : 'text-muted-foreground'
                       }`}>

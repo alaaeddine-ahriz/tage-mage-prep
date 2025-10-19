@@ -82,7 +82,7 @@ Calcul • TD                    12
 17 oct. 2024 • 20 min
 Bon test, concentré
 ─────────────────────────────────
-Logique • blanc                15
+Logique • Blanc                15
 18 oct. 2024 • 18 min
 ─────────────────────────────────
 ```
@@ -168,7 +168,7 @@ const SUBTESTS = [
 const TEST_TYPES = [
   { value: 'all', label: 'Tous' },
   { value: 'TD', label: 'TD' },
-  { value: 'blanc', label: 'Blanc' },
+  { value: 'Blanc', label: 'Blanc' },
 ]
 ```
 

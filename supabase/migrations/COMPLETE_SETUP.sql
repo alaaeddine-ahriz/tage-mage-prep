@@ -10,12 +10,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 2. CREATE TABLES
 -- ============================================
 
--- Tests (TD and blancs)
+-- Tests (TD and Blancs)
 CREATE TABLE IF NOT EXISTS tests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   date TIMESTAMP DEFAULT NOW(),
-  type VARCHAR(10) NOT NULL CHECK (type IN ('TD', 'blanc')),
+  type VARCHAR(10) NOT NULL CHECK (type IN ('TD', 'Blanc')),
   subtest VARCHAR(50) NOT NULL,
   score INTEGER NOT NULL CHECK (score >= 0 AND score <= 15),
   duration_minutes INTEGER,

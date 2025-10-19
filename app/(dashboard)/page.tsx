@@ -68,7 +68,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalTests}</div>
             <p className="text-xs text-muted-foreground">
-              TD et blancs confondus
+              TD et Blancs confondus
             </p>
           </CardContent>
         </Card>

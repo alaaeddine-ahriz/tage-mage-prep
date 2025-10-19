@@ -34,7 +34,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    type: 'TD' as 'TD' | 'blanc',
+    type: 'TD' as 'TD' | 'Blanc',
     subtest: '',
     score: '',
     duration_minutes: '',
@@ -115,8 +115,8 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
           </Button>
           <Button
             type="button"
-            variant={formData.type === 'blanc' ? 'default' : 'outline'}
-            onClick={() => setFormData({ ...formData, type: 'blanc' })}
+            variant={formData.type === 'Blanc' ? 'default' : 'outline'}
+            onClick={() => setFormData({ ...formData, type: 'Blanc' })}
             className="flex-1"
           >
             Blanc

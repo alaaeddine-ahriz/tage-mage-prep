@@ -137,7 +137,7 @@ Le champ `explanation` contient maintenant votre description.
 
 - ✅ Authentication Google OAuth
 - ✅ Dashboard avec stats
-- ✅ Suivi des tests (TD et blancs)
+- ✅ Suivi des tests (TD et Blancs)
 - ✅ Carnet d'erreurs avec photos
 - ✅ Répétition espacée des notions
 - ✅ PWA installable

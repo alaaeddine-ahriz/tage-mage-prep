@@ -184,7 +184,7 @@ From the PRD:
 - ✅ PWA installable on all platforms
 - ✅ Google OAuth authentication
 - ✅ Dashboard with stats and charts
-- ✅ Test tracking (TD and blancs)
+- ✅ Test tracking (TD and Blancs)
 - ✅ Error logging with photos
 - ✅ Spaced repetition system
 - ✅ Dark mode support

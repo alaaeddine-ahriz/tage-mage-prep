@@ -14,7 +14,7 @@ export interface Database {
           id: string
           user_id: string
           date: string
-          type: 'TD' | 'blanc'
+          type: 'TD' | 'Blanc'
           subtest: string
           score: number
           duration_minutes: number | null
@@ -25,7 +25,7 @@ export interface Database {
           id?: string
           user_id: string
           date?: string
-          type: 'TD' | 'blanc'
+          type: 'TD' | 'Blanc'
           subtest: string
           score: number
           duration_minutes?: number | null
@@ -36,7 +36,7 @@ export interface Database {
           id?: string
           user_id?: string
           date?: string
-          type?: 'TD' | 'blanc'
+          type?: 'TD' | 'Blanc'
           subtest?: string
           score?: number
           duration_minutes?: number | null
