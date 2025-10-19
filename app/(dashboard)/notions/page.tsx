@@ -394,6 +394,12 @@ export default function NotionsPage() {
         </div>
       )}
 
+      {filteredNotions.length === 0 && notions.length > 0 && (
+        <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+          Aucune notion ne correspond aux filtres sélectionnés.
+        </div>
+      )}
+
       {/* Empty State */}
       {notions?.length === 0 && (
         <Card>

@@ -274,7 +274,7 @@ export default function ErrorsPage() {
       )}
 
       {/* Errors to Review */}
-      {filteredErrorsDue.length > 0 && (
+      {filteredErrorsDue.length > 0 ? (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
             À réviser aujourd&apos;hui ({filteredErrorsDue.length})
@@ -339,10 +339,16 @@ export default function ErrorsPage() {
             ))}
           </div>
         </div>
+      ) : (
+        errorsDue.length > 0 && (
+          <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+            Aucun résultat ne correspond aux filtres sélectionnés.
+          </div>
+        )
       )}
 
       {/* Upcoming Errors */}
-      {filteredErrorsUpcoming.length > 0 && (
+      {filteredErrorsUpcoming.length > 0 ? (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
             Prochaines révisions ({filteredErrorsUpcoming.length})
@@ -409,6 +415,12 @@ export default function ErrorsPage() {
             ))}
           </div>
         </div>
+      ) : (
+        errorsUpcoming.length > 0 && (
+          <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+            Aucun résultat ne correspond aux filtres sélectionnés.
+          </div>
+        )
       )}
 
       {/* Empty State */}

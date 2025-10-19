@@ -240,11 +240,11 @@ export default function TestsPage() {
         ))}
       </div>
     ) : (
-      <div className="py-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Aucun test ne correspond aux filtres sélectionnés
-        </p>
-      </div>
+      tests.length > 0 && (
+        <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+          Aucun test ne correspond aux filtres sélectionnés.
+        </div>
+      )
     )
 
   const individualMobileContent =
@@ -321,7 +321,13 @@ export default function TestsPage() {
           </div>
         ))}
       </div>
-    ) : emptyFullState
+    ) : (
+      fullTests.length === 0 ? emptyFullState : (
+        <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+          Aucun test ne correspond aux filtres sélectionnés.
+        </div>
+      )
+    )
 
   const fullMobileContent =
     fullTests.length > 0 ? (
