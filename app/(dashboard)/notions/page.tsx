@@ -262,7 +262,7 @@ export default function NotionsPage() {
       {notionsDue.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
-            À réviser aujourd'hui ({notionsDue.length})
+            À réviser aujourd&apos;hui ({notionsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {notionsDue.map((notion) => (

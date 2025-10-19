@@ -269,7 +269,7 @@ export default function ErrorsPage() {
       {filteredErrorsDue.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
-            À réviser aujourd'hui ({filteredErrorsDue.length})
+            À réviser aujourd&apos;hui ({filteredErrorsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

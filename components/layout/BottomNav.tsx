@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, FileText, AlertCircle, Brain } from 'lucide-react'
+import { FileText, AlertCircle, Brain } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
