@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS full_tests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
   date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   type TEXT NOT NULL CHECK (type IN ('TD', 'Blanc')),
   total_score INTEGER NOT NULL CHECK (total_score >= 0 AND total_score <= 600),

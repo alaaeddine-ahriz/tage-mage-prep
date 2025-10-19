@@ -25,15 +25,7 @@ import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextRev
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import Image from 'next/image'
-
-const SUBTESTS = [
-  { value: 'all', label: 'Tous' },
-  { value: 'calcul', label: 'Calcul' },
-  { value: 'logique', label: 'Logique' },
-  { value: 'expression', label: 'Expression' },
-  { value: 'comprehension', label: 'Compréhension' },
-  { value: 'conditions', label: 'Conditions' },
-]
+import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 
 export default function ErrorsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -297,17 +289,17 @@ export default function ErrorsPage() {
                   </svg>
                 </button>
                 
-                {/* Content */}
-                <div className="relative flex h-full flex-col justify-between pointer-events-none">
-                  <div className="flex items-start gap-2">
-                    {/* <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
-                      <Clock className="mr-1 h-3 w-3" />
-                      Réviser
-                    </span> */}
-                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
-                      {error.subtest}
-                    </span>
-                  </div>
+                  {/* Content */}
+                  <div className="relative flex h-full flex-col justify-between pointer-events-none">
+                    <div className="flex items-start gap-2">
+                      {/* <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
+                        <Clock className="mr-1 h-3 w-3" />
+                        Réviser
+                      </span> */}
+                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
+                        {SUBTEST_LABELS[error.subtest] || error.subtest}
+                      </span>
+                    </div>
                   
                   <div className="space-y-2">
                     {error.explanation && (
@@ -368,8 +360,8 @@ export default function ErrorsPage() {
                 {/* Content overlay */}
                 <div className="relative flex h-full flex-col justify-between p-4 pointer-events-none">
                   <div className="flex items-start gap-2">
-                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
-                      {error.subtest}
+                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
+                      {SUBTEST_LABELS[error.subtest] || error.subtest}
                     </span>
                     {error.mastery_level >= 4 && (
                       <span className="inline-flex items-center rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-white">
@@ -426,8 +418,8 @@ export default function ErrorsPage() {
           {selectedError && (
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-sm capitalize text-muted-foreground">
-                  {selectedError.subtest}
+                <DialogTitle className="text-sm text-muted-foreground">
+                  {SUBTEST_LABELS[selectedError.subtest] || selectedError.subtest}
                 </DialogTitle>
               </DialogHeader>
 
@@ -505,8 +497,8 @@ export default function ErrorsPage() {
               <div className="space-y-6 pb-40">
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-primary/10 text-primary">
-                    {error.subtest}
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary">
+                    {SUBTEST_LABELS[error.subtest] || error.subtest}
                   </span>
                   {isDueForReview(error.next_review_at) && (
                     <span className="flex items-center gap-1 text-xs text-foreground">

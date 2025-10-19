@@ -19,13 +19,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Loader2, Image as ImageIcon, X } from 'lucide-react'
 
-const SUBTESTS = [
-  { value: 'calcul', label: 'Calcul' },
-  { value: 'logique', label: 'Logique' },
-  { value: 'expression', label: 'Expression' },
-  { value: 'comprehension', label: 'Compréhension' },
-  { value: 'conditions', label: 'Conditions' },
-]
+import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
 
 interface AddNotionFormProps {
   onSuccess?: () => void

@@ -1,5 +1,79 @@
 # 📝 Changelog - Tage Mage Tracker
 
+## Version 1.3 - Tests Complets avec calcul automatique 📊
+
+### ✨ Nouvelle fonctionnalité majeure
+
+Enregistrez vos **tests complets du Tage Mage** (6 sous-tests) avec calcul automatique du score !
+
+#### Système de notation
+
+**Par sous-test** :
+- 15 questions maximum
+- +4 points par bonne réponse
+- Score maximum : 60 points
+
+**Test complet** :
+- 6 sous-tests obligatoires : Compréhension, Calcul, Conditions, Logique, Expression, Argumentation
+- Score total maximum : 600 points (6 × 60)
+
+#### Interface
+
+**Nouveau formulaire "Test Complet"** :
+- 📅 Date et type (TD/Blanc)
+- ⏱️ Durée totale (optionnel)
+- 🎯 Saisie des bonnes réponses par sous-test (0-15)
+- 🔢 Calcul automatique des scores en temps réel
+- 💯 Total sur 600 affiché en direct
+
+**Page Tests mise à jour** :
+- 🗂️ Onglets : "Tests individuels" / "Tests complets"
+- 📊 Affichage détaillé par sous-test avec scores
+- 📈 Graphique unifié (normalisation en %)
+- 🎨 Design moderne avec cartes colorées
+
+**Visualisation** :
+- Carte expansive pour chaque test complet
+- Détail des 6 sous-tests en grille
+- Bonnes réponses + score sur 60 par sous-test
+- Score total sur 600 mis en avant
+
+#### Graphique de progression amélioré
+
+- Combine tests individuels (sur 15) et complets (sur 600)
+- Normalisation en pourcentage pour comparaison
+- Tooltip intelligent avec score brut + pourcentage
+- Identification visuelle du type de test
+
+#### Migration de base de données
+
+**Nouvelles tables** :
+- `full_tests` : Tests complets (score total, date, type)
+- `full_test_subtests` : Détails des 6 sous-tests
+- Row Level Security (RLS) activé
+- Indexes optimisés pour les performances
+
+**Installation** :
+```bash
+# Migration automatique pour nouvelles installations
+supabase db push
+
+# Ou via SQL dashboard pour installations existantes
+# Fichier : supabase/migrations/005_full_tests.sql
+```
+
+#### Avantages
+
+✅ **Réaliste** : Simule le vrai test Tage Mage (6 sous-tests)  
+✅ **Automatique** : Calcul des scores sans erreur  
+✅ **Complet** : Vision globale + détail par sous-test  
+✅ **Comparatif** : Graphique unifié pour suivre la progression  
+✅ **Motivant** : Score sur 600 pour mesurer votre niveau  
+
+Voir `FULL_TESTS_FEATURE.md` pour le guide complet d'utilisation.
+
+---
+
 ## Version 1.2 - Répétition espacée pour les erreurs 🔄
 
 ### ✨ Changement majeur : Système unifié
@@ -147,5 +221,5 @@ Le champ `explanation` contient maintenant votre description.
 
 ---
 
-**Date de mise à jour** : Octobre 2025
+**Dernière mise à jour** : Octobre 2025
 

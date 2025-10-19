@@ -25,15 +25,7 @@ import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextRev
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import type { Notion } from '@/lib/types/database.types'
-
-const SUBTESTS = [
-  { value: 'all', label: 'Tous' },
-  { value: 'calcul', label: 'Calcul' },
-  { value: 'logique', label: 'Logique' },
-  { value: 'expression', label: 'Expression' },
-  { value: 'comprehension', label: 'Compréhension' },
-  { value: 'conditions', label: 'Conditions' },
-]
+import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 
 export default function NotionsPage() {
   const [notions, setNotions] = useState<Notion[]>([])
@@ -295,8 +287,8 @@ export default function NotionsPage() {
                         <Clock className="mr-1 h-3 w-3" />
                         Réviser
                       </span> */}
-                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
-                        {notion.subtest}
+                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
+                        {SUBTEST_LABELS[notion.subtest] || notion.subtest}
                       </span>
                     </div>
                     
@@ -353,8 +345,8 @@ export default function NotionsPage() {
                   {/* Content overlay */}
                   <div className="relative flex h-full flex-col justify-between p-4 pointer-events-none">
                     <div className="flex items-start gap-2">
-                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
-                        {notion.subtest}
+                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
+                        {SUBTEST_LABELS[notion.subtest] || notion.subtest}
                       </span>
                       {notion.mastery_level >= 4 && (
                         <span className="inline-flex items-center rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-white">
@@ -407,8 +399,8 @@ export default function NotionsPage() {
           {selectedNotion && (
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle className="text-sm capitalize text-muted-foreground">
-                  {selectedNotion.subtest}
+                <DialogTitle className="text-sm text-muted-foreground">
+                  {SUBTEST_LABELS[selectedNotion.subtest] || selectedNotion.subtest}
                 </DialogTitle>
               </DialogHeader>
 
@@ -475,8 +467,8 @@ export default function NotionsPage() {
               <div className="space-y-6 pb-40">
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-primary/10 text-primary">
-                    {notion.subtest}
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary">
+                    {SUBTEST_LABELS[notion.subtest] || notion.subtest}
                   </span>
                   {isDueForReview(notion.next_review_at) && (
                     <span className="flex items-center gap-1 text-xs text-foreground">

@@ -17,13 +17,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Image as ImageIcon, Loader2, X } from 'lucide-react'
 
-const SUBTESTS = [
-  { value: 'calcul', label: 'Calcul' },
-  { value: 'logique', label: 'Logique' },
-  { value: 'expression', label: 'Expression' },
-  { value: 'comprehension', label: 'Compréhension' },
-  { value: 'conditions', label: 'Conditions' },
-]
+import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
 
 interface AddErrorFormProps {
   onSuccess?: () => void

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Target, TrendingUp, AlertCircle, Brain, Calendar, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SUBTEST_LABELS } from '@/lib/constants/subtests'
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
@@ -106,7 +107,7 @@ export default function ProfilePage() {
               return (
                 <div key={test.id} className="flex items-center justify-between py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium capitalize truncate">{test.subtest}</p>
+                    <p className="text-sm font-medium truncate">{SUBTEST_LABELS[test.subtest] || test.subtest}</p>
                     <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       <span>{new Date(test.date).toLocaleDateString('fr-FR')}</span>
