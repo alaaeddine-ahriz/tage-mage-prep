@@ -46,6 +46,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       test_attempts: {
         Row: {
@@ -75,6 +76,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       full_tests: {
         Row: {
@@ -113,6 +115,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       full_test_subtests: {
         Row: {
@@ -139,6 +142,7 @@ export interface Database {
           score?: number
           created_at?: string
         }
+        Relationships: []
       }
       full_test_attempts: {
         Row: {
@@ -165,6 +169,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       full_test_attempt_subtests: {
         Row: {
@@ -191,6 +196,7 @@ export interface Database {
           score?: number
           created_at?: string
         }
+        Relationships: []
       }
       errors: {
         Row: {
@@ -232,6 +238,7 @@ export interface Database {
           tags?: string[] | null
           created_at?: string
         }
+        Relationships: []
       }
       notions: {
         Row: {
@@ -276,6 +283,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       notion_reviews: {
         Row: {
@@ -305,7 +313,20 @@ export interface Database {
           new_mastery_level?: number
           next_review_interval_days?: number
         }
+        Relationships: []
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
@@ -355,5 +376,4 @@ export interface FullTestWithAttempts extends FullTest {
   subtests: FullTestSubtest[]
   attempts: FullTestAttempt[]
 }
-
 
