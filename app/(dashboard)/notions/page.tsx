@@ -27,6 +27,7 @@ import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import type { Notion } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
+import Image from 'next/image'
 
 export default function NotionsPage() {
   const [notions, setNotions] = useState<Notion[]>([])
@@ -36,7 +37,8 @@ export default function NotionsPage() {
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [filter, setFilter] = useState('all')
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1500)
+  const hasBottomNav = useIsMobile(768)
 
   useEffect(() => {
     loadNotions()
@@ -427,6 +429,17 @@ export default function NotionsPage() {
               </DialogHeader>
 
               <div className="space-y-4">
+                {selectedNotion.image_url && (
+                  <div className="relative w-full h-64 overflow-hidden rounded-lg border bg-muted">
+                    <Image
+                      src={selectedNotion.image_url}
+                      alt={selectedNotion.title || 'Notion'}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+
                 <h2 className="text-xl font-bold">{selectedNotion.title}</h2>
 
                 {selectedNotion.description && (
@@ -486,7 +499,7 @@ export default function NotionsPage() {
           {(item) => {
             const notion = item as Notion
             return (
-              <div className="space-y-6 pb-40">
+              <div className={`space-y-6 ${hasBottomNav ? 'pb-40' : 'pb-24'}`}>
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary">
@@ -499,6 +512,17 @@ export default function NotionsPage() {
                     </span>
                   )}
                 </div>
+
+                {notion.image_url && (
+                  <div className="relative w-full overflow-hidden rounded-xl border bg-muted/40 aspect-video">
+                    <Image
+                      src={notion.image_url}
+                      alt={notion.title || 'Notion'}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                )}
 
                 {/* Title */}
                 <h2 className="text-3xl font-bold text-foreground leading-tight">
@@ -555,7 +579,7 @@ export default function NotionsPage() {
 
       {/* Fixed Action Buttons - Mobile */}
       {isMobile && selectedNotion && (
-        <FloatingButtonsContainer>
+        <FloatingButtonsContainer hasBottomNav={hasBottomNav}>
           <FloatingButton
             variant="destructive"
             onClick={() => handleReview(false, selectedNotion)}

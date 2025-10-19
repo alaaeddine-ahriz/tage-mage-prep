@@ -191,17 +191,7 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-
-      {/* État vide */}
-      {tests.length === 0 && notionsDue.length === 0 && errorsDue.length === 0 && (
-        <div className="text-left py-16 border rounded-lg bg-muted/30 px-4">
-          <Target className="h-10 w-10 text-muted-foreground mb-3" />
-          <h3 className="text-base font-semibold text-foreground">Commencez votre préparation</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Ajoutez vos premiers tests, erreurs et notions</p>
-          <Button className="mt-4">Ajouter un test</Button>
-        </div>
-      )}
-
+      
       {/* Mobile: Theme Toggle & Sign Out - At the bottom */}
       {isMobile && (
         <div className="flex gap-3">

@@ -38,7 +38,8 @@ export default function ErrorsPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1500)
+  const hasBottomNav = useIsMobile(768)
 
   useEffect(() => {
     loadErrors()
@@ -464,8 +465,12 @@ export default function ErrorsPage() {
                   </div>
                 )}
 
+                <h2 className="text-xl font-bold">
+                  {selectedError.title || selectedError.explanation?.slice(0, 60) || 'Erreur'}
+                </h2>
+
                 {selectedError.explanation && (
-                  <p className="text-muted-foreground whitespace-pre-wrap">
+                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {selectedError.explanation}
                   </p>
                 )}
@@ -522,7 +527,7 @@ export default function ErrorsPage() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const error = item as any
             return (
-              <div className="space-y-6 pb-40">
+              <div className={`space-y-6 ${hasBottomNav ? 'pb-40' : 'pb-24'}`}>
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-primary/10 text-primary">
@@ -546,22 +551,18 @@ export default function ErrorsPage() {
                 {!error.image_url ? (
                   // No image: text-only layout similar to notions
                   <>
-                    {/* Title - either correct_answer or first line of explanation */}
-                    {error.correct_answer ? (
+                    {/* Title from correct answer when provided */}
+                    {error.correct_answer && (
                       <h2 className="text-3xl font-bold text-foreground leading-tight">
                         {error.correct_answer}
                       </h2>
-                    ) : error.explanation ? (
-                      <div className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
-                        {error.explanation}
-                      </div>
-                    ) : null}
+                    )}
                     
                     {/* Additional explanation if correct_answer exists */}
-                    {error.correct_answer && error.explanation && (
-                      <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {error.explanation && (
+                      <p className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
                         {error.explanation}
-                      </div>
+                      </p>
                     )}
                   </>
                 ) : (
@@ -593,11 +594,9 @@ export default function ErrorsPage() {
                     
                     {/* Explanation */}
                     {error.explanation && (
-                      <div className="space-y-0">
-                        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {error.explanation}
-                        </p>
-                      </div>
+                      <p className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
+                        {error.explanation}
+                      </p>
                     )}
                   </>
                 )}
@@ -645,7 +644,7 @@ export default function ErrorsPage() {
 
       {/* Fixed Action Buttons - Mobile */}
       {isMobile && selectedError && (
-        <FloatingButtonsContainer>
+        <FloatingButtonsContainer hasBottomNav={hasBottomNav}>
           <FloatingButton
             variant="destructive"
             onClick={() => handleReview(false, selectedError)}

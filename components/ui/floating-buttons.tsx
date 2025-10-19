@@ -7,11 +7,22 @@ import * as React from 'react'
 interface FloatingButtonsContainerProps {
   children: React.ReactNode
   className?: string
+  hasBottomNav?: boolean
 }
 
-export function FloatingButtonsContainer({ children, className }: FloatingButtonsContainerProps) {
+export function FloatingButtonsContainer({
+  children,
+  className,
+  hasBottomNav = true,
+}: FloatingButtonsContainerProps) {
   return (
-    <div className={cn('fixed bottom-28 left-0 right-0 px-4 pb-0 z-[60]', className)}>
+    <div
+      className={cn(
+        'fixed left-0 right-0 px-4 pb-0 z-[60]',
+        hasBottomNav ? 'bottom-28' : 'bottom-14',
+        className
+      )}
+    >
       <div className="flex gap-3">
         {children}
       </div>
@@ -43,4 +54,3 @@ export function FloatingButton({ className, variant = 'default', ...props }: Flo
     />
   )
 }
-

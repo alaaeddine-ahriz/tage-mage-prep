@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
-import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
+import { SUBTEST_OPTIONS as SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 
 interface AddTestFormProps {
   onSuccess?: () => void
@@ -42,11 +42,6 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
     e.preventDefault()
     const trimmedName = formData.name.trim()
 
-    if (!trimmedName) {
-      toast.error('Le nom du test est requis')
-      return
-    }
-
     setLoading(true)
 
     try {
@@ -58,13 +53,32 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         return
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('tests').insert({
+      let finalName = trimmedName
+
+      if (!finalName) {
+        const { count, error: countError } = await supabase
+          .from('tests')
+          .select('id', { head: true, count: 'exact' })
+          .eq('user_id', user.id)
+          .eq('subtest', formData.subtest)
+
+        if (countError) {
+          throw countError
+        }
+
+        const baseName =
+          SUBTEST_LABELS[formData.subtest] ||
+          (formData.subtest ? formData.subtest.charAt(0).toUpperCase() + formData.subtest.slice(1) : 'Test')
+
+        finalName = `${baseName} #${(count ?? 0) + 1}`
+      }
+
+      const { error } = await supabase.from('tests').insert({
         user_id: user.id,
         date: new Date(formData.date).toISOString(),
         type: formData.type,
         subtest: formData.subtest,
-        name: trimmedName,
+        name: finalName,
         score: parseInt(formData.score),
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
         notes: formData.notes || null,
@@ -99,14 +113,13 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
     <>
     <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'pb-32' : ''}`}>
       <div className="space-y-2">
-        <Label htmlFor="name">Nom du test</Label>
+        <Label htmlFor="name">Nom du test (optionnel)</Label>
         <Input
           id="name"
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Ex: TD calcul #5"
-          required
+          placeholder="Laissez vide pour générer un nom"
         />
       </div>
 
@@ -147,7 +160,16 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         <Label htmlFor="subtest">Sous-test</Label>
         <Select
           value={formData.subtest}
-          onValueChange={(value) => setFormData({ ...formData, subtest: value })}
+          onValueChange={(value) =>
+            setFormData((prev) => ({
+              ...prev,
+              subtest: value,
+              name: prev.name.trim()
+                ? prev.name
+                : (SUBTEST_LABELS[value] ||
+                    (value ? value.charAt(0).toUpperCase() + value.slice(1) : '')),
+            }))
+          }
           required
         >
           <SelectTrigger id="subtest" className="w-full">
