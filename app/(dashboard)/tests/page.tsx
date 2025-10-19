@@ -105,7 +105,7 @@ export default function TestsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
@@ -115,7 +115,7 @@ export default function TestsPage() {
       {/* Header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Tests & Scores
           </h1>
 
@@ -214,20 +214,20 @@ export default function TestsPage() {
 
       {/* Stats - Carte ultra fine - Desktop only */}
       {!isMobile && tests.length > 0 && (
-        <Card className="bg-slate-50/50 dark:bg-slate-900/50">
+        <Card className="bg-muted/50">
           <CardContent className="p-0">
-            <div className="flex items-center justify-around divide-x divide-slate-200 dark:divide-slate-700">
+            <div className="flex items-center justify-around divide-x divide-border">
               <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
                 <span className="text-xs">📊</span>
-                <span className="text-base font-bold text-slate-900 dark:text-white">{tests.length}</span>
+                <span className="text-base font-bold text-foreground">{tests.length}</span>
               </div>
               <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
-                <TrendingUp className="h-3.5 w-3.5 text-blue-600" />
-                <span className="text-base font-bold text-blue-600">{overallAverage.toFixed(1)}</span>
+                <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                <span className="text-base font-bold text-primary">{overallAverage.toFixed(1)}</span>
               </div>
               <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
-                <Target className="h-3.5 w-3.5 text-green-600" />
-                <span className="text-base font-bold text-green-600">
+                <Target className="h-3.5 w-3.5 text-primary" />
+                <span className="text-base font-bold text-primary">
                   {Math.max(...tests.map((t: Test) => t.score))}
                 </span>
               </div>
@@ -258,21 +258,21 @@ export default function TestsPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Moyenne</span>
+                  <span className="text-sm text-muted-foreground">Moyenne</span>
                   <span className="font-semibold">
                     {(stats.totalScore / stats.count).toFixed(1)}/15
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Meilleur score</span>
+                  <span className="text-sm text-muted-foreground">Meilleur score</span>
                   <span className="font-semibold">{stats.bestScore}/15</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Dernier score</span>
+                  <span className="text-sm text-muted-foreground">Dernier score</span>
                   <span className="font-semibold">{stats.lastScore}/15</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Tests</span>
+                  <span className="text-sm text-muted-foreground">Tests</span>
                   <span className="font-semibold">{stats.count}</span>
                 </div>
               </CardContent>
@@ -284,29 +284,29 @@ export default function TestsPage() {
       {/* Tests List */}
       {tests && tests.length > 0 ? (
         <div className="space-y-2">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-base font-semibold text-foreground">
             Historique ({filteredTests.length})
           </h2>
           {filteredTests.length > 0 ? (
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-border">
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {filteredTests.map((test: any) => (
                 <div key={test.id} className="flex items-center justify-between py-3">
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium capitalize text-slate-900 dark:text-white">
+                      <span className="text-sm font-medium capitalize text-foreground">
                         {test.subtest}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">•</span>
+                      <span className="text-xs text-muted-foreground">•</span>
                       <span className={`text-xs font-medium ${
                         test.type === 'blanc' 
-                          ? 'text-purple-600 dark:text-purple-400'
-                          : 'text-slate-600 dark:text-slate-400'
+                          ? 'text-primary'
+                          : 'text-muted-foreground'
                       }`}>
                         {test.type}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {new Date(test.date).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'short',
@@ -315,18 +315,18 @@ export default function TestsPage() {
                       {test.duration_minutes && ` • ${test.duration_minutes} min`}
                     </p>
                     {test.notes && (
-                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">
+                      <p className="text-xs text-muted-foreground line-clamp-1">
                         {test.notes}
                       </p>
                     )}
                   </div>
-                  <span className="ml-4 text-2xl font-bold text-blue-600">{test.score}</span>
+                  <span className="ml-4 text-2xl font-bold text-primary">{test.score}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Aucun test ne correspond aux filtres sélectionnés
               </p>
             </div>
@@ -335,9 +335,9 @@ export default function TestsPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <Plus className="mx-auto h-12 w-12 text-slate-400" />
+            <Plus className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">Aucun test enregistré</h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-sm text-muted-foreground">
               Ajoutez votre premier test pour commencer à suivre votre progression
             </p>
           </CardContent>

@@ -37,10 +37,10 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           Dashboard
         </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-muted-foreground">
           Vue d&apos;ensemble de votre préparation au Tage Mage
         </p>
       </div>
@@ -50,11 +50,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Score Moyen</CardTitle>
-            <Target className="h-4 w-4 text-blue-600" />
+            <Target className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{averageScore}/15</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Sur {totalTests} test{totalTests > 1 ? 's' : ''}
             </p>
           </CardContent>
@@ -63,11 +63,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tests Effectués</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalTests}</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-muted-foreground">
               TD et blancs confondus
             </p>
           </CardContent>
@@ -76,11 +76,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Erreurs à Réviser</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <AlertCircle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{errorsDueCount}</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Aujourd&apos;hui
             </p>
           </CardContent>
@@ -89,11 +89,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Notions à Réviser</CardTitle>
-            <Brain className="h-4 w-4 text-purple-600" />
+            <Brain className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{notionsToReview}</div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Aujourd&apos;hui
             </p>
           </CardContent>
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
       {/* Recent Tests */}
       {tests && tests.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-foreground">
             Tests Récents
           </h2>
           <div className="space-y-2">
@@ -114,14 +114,14 @@ export default async function DashboardPage() {
                 className="flex items-center justify-between py-2"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">
+                  <p className="text-sm font-medium text-foreground capitalize">
                     {test.subtest}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {new Date(test.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {test.type}
                   </p>
                 </div>
-                <span className="text-2xl font-bold text-blue-600">{test.score}</span>
+                <span className="text-2xl font-bold text-primary">{test.score}</span>
               </div>
             ))}
           </div>
@@ -132,9 +132,9 @@ export default async function DashboardPage() {
       {totalTests === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Target className="mx-auto h-12 w-12 text-slate-400" />
+            <Target className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">Aucun test enregistré</h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-sm text-muted-foreground">
               Commencez par ajouter votre premier test pour suivre votre progression
             </p>
           </CardContent>

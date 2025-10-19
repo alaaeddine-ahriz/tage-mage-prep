@@ -222,7 +222,7 @@ export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
           placeholder="Ex: Problème de calcul mental sur les fractions..."
           rows={4}
         />
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-muted-foreground">
           Photo ou description requise
         </p>
       </div>

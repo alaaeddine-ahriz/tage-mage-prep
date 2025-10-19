@@ -42,10 +42,10 @@ export function Header({ user }: HeaderProps) {
     .toUpperCase() || user?.email?.[0].toUpperCase() || 'U'
 
   return (
-      <header className="sticky top-0 z-30 border-b bg-white dark:bg-slate-900">
+      <header className="sticky top-0 z-30 border-b bg-card">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-4 md:hidden">
-            <span className="text-xl font-bold text-blue-900 dark:text-white">
+            <span className="text-xl font-bold text-foreground">
             Tage Mage
           </span>
         </div>
@@ -78,7 +78,7 @@ export function Header({ user }: HeaderProps) {
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{user?.user_metadata?.full_name || 'Utilisateur'}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
               {/* <DropdownMenuSeparator />

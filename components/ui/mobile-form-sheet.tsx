@@ -65,7 +65,8 @@ export function MobileFormSheet({
   return (
     <div className="fixed inset-0 z-50 bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 backdrop-blur-sm px-4 py-3">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 backdrop-blur-sm px-4 py-3">
+        <h2 className="text-lg font-semibold">{title}</h2>
         <Button
           variant="ghost"
           size="icon"
@@ -74,7 +75,6 @@ export function MobileFormSheet({
         >
           <X className="h-5 w-5" />
         </Button>
-        <h2 className="text-lg font-semibold">{title}</h2>
       </div>
 
       {/* Content */}

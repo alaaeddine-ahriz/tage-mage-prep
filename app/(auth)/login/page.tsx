@@ -10,16 +10,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-2xl dark:bg-slate-900">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-4">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-card p-8 shadow-2xl">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-            <Brain className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Brain className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             Tage Mage Tracker
           </h1>
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-3 text-sm text-muted-foreground">
             Suivez votre préparation au Tage Mage efficacement
           </p>
         </div>
@@ -27,7 +27,7 @@ export default function LoginPage() {
         <div className="space-y-4">
           <Button 
             onClick={handleGoogleSignIn}
-            className="w-full gap-3 bg-white text-slate-900 hover:bg-slate-50 border border-slate-300 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 dark:border-slate-600"
+            className="w-full gap-3 bg-card text-foreground hover:bg-accent border border-border"
             size="lg"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -52,7 +52,7 @@ export default function LoginPage() {
           </Button>
         </div>
 
-        <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        <div className="mt-6 text-center text-xs text-muted-foreground">
           En vous connectant, vous acceptez nos conditions d&apos;utilisation
         </div>
       </div>

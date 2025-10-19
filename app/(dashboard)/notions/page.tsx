@@ -167,7 +167,7 @@ export default function NotionsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
@@ -177,7 +177,7 @@ export default function NotionsPage() {
       {/* Header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Notions
           </h1>
 
@@ -238,8 +238,8 @@ export default function NotionsPage() {
                 onClick={() => setFilter(subtest.value)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === subtest.value
-                    ? 'bg-slate-700 text-white dark:bg-slate-200 dark:text-slate-900'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground'
                 }`}
               >
                 {subtest.label}
@@ -252,17 +252,17 @@ export default function NotionsPage() {
       {/* Stats compactes - Desktop only */}
       {!isMobile && (
         <div className="flex gap-2">
-          <div className="flex items-center gap-1.5 rounded-md border bg-slate-50 px-3 py-1.5 dark:bg-slate-900">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+          <div className="flex items-center gap-1.5 rounded-md border bg-muted px-3 py-1.5">
+            <span className="text-xs text-muted-foreground">Total</span>
             <span className="text-lg font-bold">{notions?.length || 0}</span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-3 py-1.5 dark:border-orange-900/50 dark:bg-orange-950/50">
-            <Clock className="h-3.5 w-3.5 text-orange-600" />
-            <span className="text-lg font-bold text-orange-600">{notionsDue.length}</span>
+          <div className="flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-3 py-1.5">
+            <Clock className="h-3.5 w-3.5 text-primary" />
+            <span className="text-lg font-bold text-primary">{notionsDue.length}</span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 dark:border-green-900/50 dark:bg-green-950/50">
-            <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-            <span className="text-lg font-bold text-green-600">
+          <div className="flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-3 py-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            <span className="text-lg font-bold text-primary">
               {notions && notions.length > 0
                 ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
                 : '0.0'}
@@ -274,18 +274,25 @@ export default function NotionsPage() {
       {/* Notions to Review */}
       {notionsDue.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-foreground">
             À réviser maintenant ({notionsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {notionsDue.map((notion) => (
               <div
                 key={notion.id}
-                className="group relative h-48 w-full overflow-hidden rounded-lg border-2 border-orange-200 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 dark:from-orange-950 dark:via-orange-900 dark:to-amber-950 p-4 text-left transition-all hover:shadow-lg dark:border-orange-900">
+                className="group relative h-48 w-full overflow-hidden rounded-lg border-2 border-primary/30 p-4 text-left transition-all hover:shadow-lg">
+                  {/* Background */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: 'url(/gradient.jpeg)' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  
                   {/* Button to open modal */}
                   <button
                     onClick={() => openNotionModal(notion)}
-                    className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-orange-700 active:scale-95"
+                    className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
                     aria-label="Voir la notion"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
@@ -297,10 +304,10 @@ export default function NotionsPage() {
                   {/* Content */}
                   <div className="relative flex h-full flex-col justify-between pointer-events-none">
                     <div className="flex items-start justify-between">
-                      <span className="inline-flex items-center rounded-md bg-white/90 dark:bg-black/90 px-2 py-1 text-xs font-medium capitalize">
+                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
                         {notion.subtest}
                       </span>
-                      <span className="inline-flex items-center rounded-md bg-orange-600 px-2 py-1 text-xs font-medium text-white">
+                      <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
                         <Clock className="mr-1 h-3 w-3" />
                         Réviser
                       </span>
@@ -314,9 +321,9 @@ export default function NotionsPage() {
                         <span>Niveau {notion.mastery_level}/5</span>
                         <span>{notion.review_count} révisions</span>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30 dark:bg-black/30">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
                         <div 
-                          className="h-full bg-orange-600 transition-all"
+                          className="h-full bg-white transition-all"
                           style={{ width: `${(notion.mastery_level / 5) * 100}%` }}
                         />
                       </div>
@@ -331,19 +338,23 @@ export default function NotionsPage() {
       {/* Upcoming Notions */}
       {notionsUpcoming.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-foreground">
             Prochaines révisions ({notionsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {notionsUpcoming.map((notion) => (
               <div key={notion.id} className="relative h-48 w-full overflow-hidden rounded-lg border transition-all hover:shadow-md">
-                  {/* Background dégradé */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-700 to-blue-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
+                  {/* Background */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: 'url(/gradient.jpeg)' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   
                   {/* Button to open modal */}
                   <button
                     onClick={() => openNotionModal(notion)}
-                    className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-blue-700 active:scale-95 dark:bg-blue-400 dark:text-blue-950 dark:hover:bg-blue-300"
+                    className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
                     aria-label="Voir la notion"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
@@ -354,12 +365,12 @@ export default function NotionsPage() {
                   
                   {/* Content overlay */}
                   <div className="relative flex h-full flex-col justify-between p-4 pointer-events-none">
-                    <div className="flex items-start justify-between">
-                      <span className="inline-flex items-center rounded-md bg-white/90 dark:bg-black/90 px-2 py-1 text-xs font-medium capitalize">
+                    <div className="flex items-start gap-2">
+                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
                         {notion.subtest}
                       </span>
                       {notion.mastery_level >= 4 && (
-                        <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-100">
+                        <span className="inline-flex items-center rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-white">
                           <TrendingUp className="mr-1 h-3 w-3" />
                           Maîtrisée
                         </span>
@@ -374,9 +385,9 @@ export default function NotionsPage() {
                         <span>Niveau {notion.mastery_level}/5</span>
                         <span>{new Date(notion.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30 dark:bg-black/30">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
                         <div 
-                          className="h-full bg-white dark:bg-slate-400 transition-all"
+                          className="h-full bg-white transition-all"
                           style={{ width: `${(notion.mastery_level / 5) * 100}%` }}
                         />
                       </div>
@@ -392,9 +403,9 @@ export default function NotionsPage() {
       {notions?.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <TrendingUp className="mx-auto h-12 w-12 text-slate-400" />
+            <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">Aucune notion enregistrée</h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-sm text-muted-foreground">
               Ajoutez vos premières notions pour commencer à les réviser
             </p>
           </CardContent>
@@ -409,7 +420,7 @@ export default function NotionsPage() {
           {selectedNotion && (
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle className="text-sm capitalize text-slate-600 dark:text-slate-400">
+                <DialogTitle className="text-sm capitalize text-muted-foreground">
                   {selectedNotion.subtest}
                 </DialogTitle>
               </DialogHeader>
@@ -418,18 +429,18 @@ export default function NotionsPage() {
                 <h2 className="text-xl font-bold">{selectedNotion.title}</h2>
 
                 {selectedNotion.description && (
-                  <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                  <p className="text-muted-foreground whitespace-pre-wrap">
                     {selectedNotion.description}
                   </p>
                 )}
 
                 <div className="flex gap-4 text-sm">
                   <div>
-                    <span className="text-slate-500">Niveau:</span>{' '}
+                    <span className="text-muted-foreground">Niveau:</span>{' '}
                     <span className="font-medium">{selectedNotion.mastery_level}/5</span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Révisions:</span>{' '}
+                    <span className="text-muted-foreground">Révisions:</span>{' '}
                     <span className="font-medium">{selectedNotion.review_count}</span>
                   </div>
                 </div>
@@ -444,10 +455,10 @@ export default function NotionsPage() {
                     {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
                   </Button>
                   <Button
-                    variant="default"
+                    variant="success"
                     onClick={() => handleReview(true)}
                     disabled={updating}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1"
                   >
                     {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
                   </Button>
@@ -477,11 +488,11 @@ export default function NotionsPage() {
               <div className="space-y-6 pb-32">
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-blue-100 text-blue-900 dark:bg-blue-800 dark:text-white">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-primary/10 text-primary">
                     {notion.subtest}
                   </span>
                   {isDueForReview(notion.next_review_at) && (
-                    <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-white">
+                    <span className="flex items-center gap-1 text-xs text-foreground">
                       <Clock className="h-3 w-3" />
                       À réviser
                     </span>
@@ -489,13 +500,13 @@ export default function NotionsPage() {
                 </div>
 
                 {/* Title */}
-                <h2 className="text-3xl font-bold text-blue-900 dark:text-white leading-tight">
+                <h2 className="text-3xl font-bold text-foreground leading-tight">
                   {notion.title}
                 </h2>
 
                 {/* Description */}
                 {notion.description && (
-                  <div className="text-base text-blue-700 dark:text-white leading-relaxed whitespace-pre-wrap">
+                  <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {notion.description}
                   </div>
                 )}
@@ -504,21 +515,21 @@ export default function NotionsPage() {
                 <div className="grid grid-cols-3 gap-6">
                   {/* Mastery */}
                   <div>
-                    <p className="text-xs text-blue-600 dark:text-white mb-1.5">Maîtrise</p>
+                    <p className="text-xs text-muted-foreground mb-1.5">Maîtrise</p>
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-3xl font-bold text-blue-900 dark:text-white">{notion.mastery_level}</span>
-                      <span className="text-sm text-blue-600 dark:text-white">/5</span>
+                      <span className="text-3xl font-bold text-foreground">{notion.mastery_level}</span>
+                      <span className="text-sm text-muted-foreground">/5</span>
                     </div>
                   </div>
                   {/* Reviews */}
                   <div>
-                    <p className="text-xs text-blue-600 dark:text-white mb-1.5">Révisions</p>
-                    <p className="text-3xl font-bold text-blue-900 dark:text-white">{notion.review_count}</p>
+                    <p className="text-xs text-muted-foreground mb-1.5">Révisions</p>
+                    <p className="text-3xl font-bold text-foreground">{notion.review_count}</p>
                   </div>
                   {/* Next review */}
                   <div>
-                    <p className="text-xs text-blue-600 dark:text-white mb-1.5">Prochaine</p>
-                    <p className="text-3xl font-bold text-blue-900 dark:text-white">
+                    <p className="text-xs text-muted-foreground mb-1.5">Prochaine</p>
+                    <p className="text-3xl font-bold text-foreground">
                       {new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'short'
@@ -545,9 +556,10 @@ export default function NotionsPage() {
               {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Oublié'}
             </Button>
             <Button
+              variant="success"
               onClick={() => handleReview(true, selectedNotion)}
               disabled={updating}
-              className="flex-1 h-14 text-base font-semibold bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg"
+              className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg"
             >
               {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Je sais'}
             </Button>

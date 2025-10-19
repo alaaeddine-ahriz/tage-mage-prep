@@ -26,11 +26,11 @@ export function ProgressChart({ tests }: ProgressChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700" />
         <XAxis 
           dataKey="date" 
-          className="text-xs text-slate-600 dark:text-slate-400"
+          className="text-xs text-muted-foreground"
         />
         <YAxis 
           domain={[0, 15]} 
-          className="text-xs text-slate-600 dark:text-slate-400"
+          className="text-xs text-muted-foreground"
         />
         <Tooltip
           contentStyle={{

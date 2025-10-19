@@ -16,13 +16,13 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r bg-white dark:bg-slate-900 md:block">
+    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 border-r bg-card md:block">
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center border-b px-6">
           <div className="flex items-center gap-2">
-            <Brain className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            <span className="text-xl font-bold text-blue-900 dark:text-white">
+            <Brain className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">
               TM Tracker
             </span>
           </div>
@@ -39,8 +39,8 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-800 dark:text-blue-200'
-                    : 'text-blue-600 hover:bg-blue-50 hover:text-blue-900 dark:text-blue-400 dark:hover:bg-blue-800 dark:hover:text-blue-100'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 <item.icon className="h-5 w-5" />

@@ -29,15 +29,15 @@ export function OfflineIndicator() {
 
   return (
     <div className="fixed bottom-20 right-4 z-50 md:bottom-4">
-      <div className="rounded-lg border bg-white p-3 shadow-lg dark:bg-slate-900">
+      <div className="rounded-lg border bg-card p-3 shadow-lg">
         <div className="flex items-center gap-3">
           {!online ? (
             <>
-              <WifiOff className="h-5 w-5 text-orange-500" />
+              <WifiOff className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-medium">Mode hors ligne</p>
                 {queueSize > 0 && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {queueSize} action{queueSize > 1 ? 's' : ''} en attente
                   </p>
                 )}
@@ -45,11 +45,11 @@ export function OfflineIndicator() {
             </>
           ) : (
             <>
-              <Wifi className="h-5 w-5 text-green-500" />
+              <Wifi className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-medium">En ligne</p>
                 {queueSize > 0 && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {queueSize} action{queueSize > 1 ? 's' : ''} à synchroniser
                   </p>
                 )}
