@@ -2,11 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, FileText, AlertCircle, Brain } from 'lucide-react'
+import { FileText, AlertCircle, Brain } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Tests', href: '/tests', icon: FileText },
   { name: 'Erreurs', href: '/errors', icon: AlertCircle },
   { name: 'Notions', href: '/notions', icon: Brain },

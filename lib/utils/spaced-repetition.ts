@@ -37,7 +37,16 @@ export function updateMasteryLevel(
 
 export function isDueForReview(nextReviewDate: string | null): boolean {
   if (!nextReviewDate) return true
-  return new Date(nextReviewDate) <= new Date()
+  
+  const reviewDate = new Date(nextReviewDate)
+  const today = new Date()
+  
+  // Reset time to compare only dates
+  const reviewDateOnly = new Date(reviewDate.getFullYear(), reviewDate.getMonth(), reviewDate.getDate())
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  
+  // Return true if review date is today or in the past
+  return reviewDateOnly <= todayOnly
 }
 
 

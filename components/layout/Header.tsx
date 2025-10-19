@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { signOut } from '@/lib/supabase/auth'
-import { LogOut, Moon, Sun } from 'lucide-react'
+import { LogOut, Moon, Sun, User } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 
@@ -81,11 +81,11 @@ export function Header({ user }: HeaderProps) {
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
-              {/* <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/')}>
                 <User className="mr-2 h-4 w-4" />
                 Profil
-              </DropdownMenuItem> */}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />

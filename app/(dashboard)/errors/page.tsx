@@ -269,14 +269,14 @@ export default function ErrorsPage() {
       {filteredErrorsDue.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
-            À réviser maintenant ({filteredErrorsDue.length})
+            À réviser aujourd'hui ({filteredErrorsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {filteredErrorsDue.map((error: any) => (
               <div
                 key={error.id}
-                className="relative h-48 w-full overflow-hidden rounded-lg border-2 border-primary/30 p-4 text-left transition-all hover:shadow-lg"
+                className="relative h-48 w-full overflow-hidden rounded-lg border p-4 text-left transition-all hover:shadow-lg"
               >
                 {/* Background */}
                 <div 
@@ -291,7 +291,7 @@ export default function ErrorsPage() {
                   className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
                   aria-label="Voir l'erreur"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                   </svg>
@@ -299,13 +299,13 @@ export default function ErrorsPage() {
                 
                 {/* Content */}
                 <div className="relative flex h-full flex-col justify-between pointer-events-none">
-                  <div className="flex items-start justify-between">
-                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
-                      {error.subtest}
-                    </span>
-                    <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
+                  <div className="flex items-start gap-2">
+                    {/* <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
                       <Clock className="mr-1 h-3 w-3" />
                       Réviser
+                    </span> */}
+                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
+                      {error.subtest}
                     </span>
                   </div>
                   
@@ -359,7 +359,7 @@ export default function ErrorsPage() {
                   className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
                   aria-label="Voir l'erreur"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                   </svg>
@@ -573,10 +573,7 @@ export default function ErrorsPage() {
                     
                     {/* Explanation */}
                     {error.explanation && (
-                      <div className="space-y-2">
-                        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                          Explication
-                        </h3>
+                      <div className="space-y-0">
                         <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                           {error.explanation}
                         </p>

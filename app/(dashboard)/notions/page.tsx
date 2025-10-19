@@ -24,6 +24,7 @@ import { Plus, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import type { Notion } from '@/lib/types/database.types'
 
 const SUBTESTS = [
   { value: 'all', label: 'Tous' },
@@ -33,20 +34,6 @@ const SUBTESTS = [
   { value: 'comprehension', label: 'Compréhension' },
   { value: 'conditions', label: 'Conditions' },
 ]
-
-interface Notion {
-  id: string
-  title: string
-  description?: string
-  subtest: string
-  mastery_level: number
-  review_count: number
-  next_review_at: string
-  last_reviewed_at?: string
-  user_id: string
-  created_at: string
-  updated_at: string
-}
 
 export default function NotionsPage() {
   const [notions, setNotions] = useState<Notion[]>([])
@@ -275,17 +262,17 @@ export default function NotionsPage() {
       {notionsDue.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
-            À réviser maintenant ({notionsDue.length})
+            À réviser aujourd'hui ({notionsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {notionsDue.map((notion) => (
               <div
                 key={notion.id}
-                className="group relative h-48 w-full overflow-hidden rounded-lg border-2 border-primary/30 p-4 text-left transition-all hover:shadow-lg">
+                className="group relative h-48 w-full overflow-hidden rounded-lg border p-4 text-left transition-all hover:shadow-lg">
                   {/* Background */}
                   <div 
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: 'url(/gradient.jpeg)' }}
+                    style={{ backgroundImage: `url(${notion.image_url || '/gradient.jpeg'})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   
@@ -295,7 +282,7 @@ export default function NotionsPage() {
                     className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
                     aria-label="Voir la notion"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     </svg>
@@ -303,13 +290,13 @@ export default function NotionsPage() {
                   
                   {/* Content */}
                   <div className="relative flex h-full flex-col justify-between pointer-events-none">
-                    <div className="flex items-start justify-between">
-                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
-                        {notion.subtest}
-                      </span>
-                      <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
+                    <div className="flex items-start gap-2">
+                      {/* <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
                         <Clock className="mr-1 h-3 w-3" />
                         Réviser
+                      </span> */}
+                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium capitalize">
+                        {notion.subtest}
                       </span>
                     </div>
                     
@@ -347,7 +334,7 @@ export default function NotionsPage() {
                   {/* Background */}
                   <div 
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: 'url(/gradient.jpeg)' }}
+                    style={{ backgroundImage: `url(${notion.image_url || '/gradient.jpeg'})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   
@@ -357,7 +344,7 @@ export default function NotionsPage() {
                     className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
                     aria-label="Voir la notion"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     </svg>
@@ -383,7 +370,7 @@ export default function NotionsPage() {
                       </h3>
                       <div className="flex items-center justify-between text-xs text-white/90">
                         <span>Niveau {notion.mastery_level}/5</span>
-                        <span>{new Date(notion.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                        <span>{notion.next_review_at ? new Date(notion.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
                       </div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
                         <div 
@@ -530,10 +517,10 @@ export default function NotionsPage() {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1.5">Prochaine</p>
                     <p className="text-3xl font-bold text-foreground">
-                      {new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
+                      {notion.next_review_at ? new Date(notion.next_review_at).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'short'
-                      })}
+                      }) : 'N/A'}
                     </p>
                   </div>
                 </div>

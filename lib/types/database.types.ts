@@ -92,6 +92,7 @@ export interface Database {
           subtest: string
           title: string
           description: string | null
+          image_url: string | null
           mastery_level: number
           last_reviewed_at: string | null
           next_review_at: string | null
@@ -105,6 +106,7 @@ export interface Database {
           subtest: string
           title: string
           description?: string | null
+          image_url?: string | null
           mastery_level?: number
           last_reviewed_at?: string | null
           next_review_at?: string | null
@@ -118,6 +120,7 @@ export interface Database {
           subtest?: string
           title?: string
           description?: string | null
+          image_url?: string | null
           mastery_level?: number
           last_reviewed_at?: string | null
           next_review_at?: string | null
