@@ -13,6 +13,7 @@ import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 interface Test {
   id: string
+  name: string
   score: number
   date: string
   subtest: string
@@ -171,7 +172,9 @@ export default function ProfilePage() {
               return (
                 <div key={test.id} className="flex items-center justify-between py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{SUBTEST_LABELS[test.subtest] || test.subtest}</p>
+                    <p className="text-sm font-medium truncate">
+                      {test.name || SUBTEST_LABELS[test.subtest] || test.subtest}
+                    </p>
                     <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       <span>{new Date(test.date).toLocaleDateString('fr-FR')}</span>

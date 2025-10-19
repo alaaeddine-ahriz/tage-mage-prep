@@ -29,6 +29,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
   const isMobile = useIsMobile()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
+    name: '',
     date: new Date().toISOString().split('T')[0],
     type: 'TD' as 'TD' | 'Blanc',
     subtest: '',
@@ -39,6 +40,13 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const trimmedName = formData.name.trim()
+
+    if (!trimmedName) {
+      toast.error('Le nom du test est requis')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -56,6 +64,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         date: new Date(formData.date).toISOString(),
         type: formData.type,
         subtest: formData.subtest,
+        name: trimmedName,
         score: parseInt(formData.score),
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
         notes: formData.notes || null,
@@ -67,6 +76,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
       
       // Reset form
       setFormData({
+        name: '',
         date: new Date().toISOString().split('T')[0],
         type: 'TD',
         subtest: formData.subtest, // Keep last subtest selected
@@ -88,6 +98,18 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
   return (
     <>
     <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'pb-32' : ''}`}>
+      <div className="space-y-2">
+        <Label htmlFor="name">Nom du test</Label>
+        <Input
+          id="name"
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Ex: TD calcul #5"
+          required
+        />
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
         <Input
@@ -142,7 +164,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="score">Score (/60)</Label>
+        <Label htmlFor="score">Bonnes réponses (/15)</Label>
         <Input
           id="score"
           type="number"

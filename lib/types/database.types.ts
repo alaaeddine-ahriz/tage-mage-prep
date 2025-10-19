@@ -13,7 +13,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          name: string | null
+          name: string
           date: string
           type: 'TD' | 'Blanc'
           subtest: string
@@ -25,7 +25,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          name?: string | null
+          name: string
           date?: string
           type: 'TD' | 'Blanc'
           subtest: string
@@ -37,7 +37,7 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          name?: string | null
+          name?: string
           date?: string
           type?: 'TD' | 'Blanc'
           subtest?: string
