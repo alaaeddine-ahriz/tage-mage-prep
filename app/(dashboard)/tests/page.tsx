@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -17,8 +17,7 @@ import { AddTestForm } from '@/components/forms/AddTestForm'
 import { AddFullTestForm } from '@/components/forms/AddFullTestForm'
 import { TestAttemptsModal } from '@/components/dashboard/TestAttemptsModal'
 import { FullTestAttemptsModal } from '@/components/dashboard/FullTestAttemptsModal'
-import { Plus, Loader2, TrendingUp, Target } from 'lucide-react'
-import { ProgressChart } from '@/components/charts/ProgressChart'
+import { Plus, Loader2 } from 'lucide-react'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { Test, TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
@@ -169,29 +168,174 @@ export default function TestsPage() {
     return matchesSubtest && matchesType
   })
 
-  // Calculate stats by subtest
-  const statsBySubtest = tests?.reduce((acc, test) => {
-    if (!acc[test.subtest]) {
-      acc[test.subtest] = {
-        count: 0,
-        totalScore: 0,
-        bestScore: 0,
-        lastScore: 0,
-      }
-    }
-    acc[test.subtest].count++
-    acc[test.subtest].totalScore += test.score
-    acc[test.subtest].bestScore = Math.max(acc[test.subtest].bestScore, test.score)
-    if (acc[test.subtest].count === 1) {
-      acc[test.subtest].lastScore = test.score
-    }
-    return acc
-  }, {} as Record<string, { count: number; totalScore: number; bestScore: number; lastScore: number }>)
+  const emptyIndividualState = (
+    <Card>
+      <CardContent className="py-12 text-center">
+        <Plus className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h3 className="mt-4 text-lg font-semibold">Aucun test individuel</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ajoutez votre premier test individuel
+        </p>
+      </CardContent>
+    </Card>
+  )
 
-  // Calculate overall average
-  const overallAverage = tests.length > 0 
-    ? tests.reduce((sum: number, test: Test) => sum + test.score, 0) / tests.length
-    : 0
+  const emptyFullState = (
+    <Card>
+      <CardContent className="py-12 text-center">
+        <Plus className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h3 className="mt-4 text-lg font-semibold">Aucun test complet</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ajoutez votre premier test complet (6 sous-tests)
+        </p>
+      </CardContent>
+    </Card>
+  )
+
+  const individualListContent =
+    filteredTests.length > 0 ? (
+      <div className="divide-y divide-border">
+        {filteredTests.map((test: TestWithAttempts) => (
+          <div
+            key={test.id}
+            className="flex w-full items-center justify-between py-3 cursor-pointer hover:bg-muted/50 px-0 transition-colors"
+            onClick={() => handleTestClick(test)}
+          >
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-foreground">
+                  {test.name || SUBTEST_LABELS[test.subtest] || test.subtest}
+                </span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span
+                  className={`text-xs font-medium ${
+                    test.type === 'Blanc' ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  {test.type}
+                </span>
+                {test.attempts.length > 0 && (
+                  <>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs text-muted-foreground">
+                      {test.attempts.length + 1} tentative{test.attempts.length > 0 ? 's' : ''}
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {new Date(test.date).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+                {test.duration_minutes && ` • ${test.duration_minutes} min`}
+              </p>
+              {test.notes && (
+                <p className="text-xs text-muted-foreground line-clamp-1">{test.notes}</p>
+              )}
+            </div>
+            <span className="ml-4 text-2xl font-bold text-primary">{test.score}</span>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="py-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          Aucun test ne correspond aux filtres sélectionnés
+        </p>
+      </div>
+    )
+
+  const individualMobileContent =
+    tests.length > 0 ? (
+      <div className="space-y-2">
+        <h2 className="text-base font-semibold text-foreground">
+          Historique ({filteredTests.length})
+        </h2>
+        {individualListContent}
+      </div>
+    ) : (
+      emptyIndividualState
+    )
+
+  const individualDesktopContent = tests.length > 0 ? individualListContent : emptyIndividualState
+
+  const fullListContent =
+    fullTests.length > 0 ? (
+      <div className="divide-y divide-border">
+        {fullTests.map((fullTest) => (
+          <div
+            key={fullTest.id}
+            className="flex w-full items-center justify-between py-3 cursor-pointer hover:bg-muted/50 px-0 transition-colors"
+            onClick={() => setSelectedFullTest(fullTest)}
+          >
+            <div className="flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-foreground">
+                  {fullTest.name}
+                </span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span
+                  className={`text-xs font-medium ${
+                    fullTest.type === 'Blanc' ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  {fullTest.type}
+                </span>
+                {fullTest.attempts && fullTest.attempts.length > 0 && (
+                  <>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs text-muted-foreground">
+                      {fullTest.attempts.length + 1} tentative{fullTest.attempts.length > 0 ? 's' : ''}
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {new Date(fullTest.date).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+                {fullTest.duration_minutes && ` • ${fullTest.duration_minutes} min`}
+              </p>
+              {fullTest.subtests.length > 0 && !isMobile && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {fullTest.subtests.map((subtest: FullTestSubtest) => (
+                    <span key={subtest.id} className="inline-flex items-center gap-1">
+                      <span>{SUBTEST_LABELS[subtest.subtest] || subtest.subtest}</span>
+                      <span className="font-semibold text-foreground">{subtest.score}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {fullTest.notes && (
+                <p className="text-xs text-muted-foreground line-clamp-2">{fullTest.notes}</p>
+              )}
+            </div>
+            <div className="ml-4 flex flex-shrink-0 flex-col items-end">
+              <span className="text-2xl font-bold text-primary">{fullTest.total_score}</span>
+              <span className="text-xs text-muted-foreground">/ 600</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : emptyFullState
+
+  const fullMobileContent =
+    fullTests.length > 0 ? (
+      <div className="space-y-2">
+        <h2 className="text-base font-semibold text-foreground">
+          Historique ({fullTests.length})
+        </h2>
+        {fullListContent}
+      </div>
+    ) : (
+      emptyFullState
+    )
+
+  const fullDesktopContent = fullListContent
 
   if (loading) {
     return (
@@ -202,11 +346,11 @@ export default function TestsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-10 md:pt-4">
       {/* Header */}
-      <div className="space-y-4">
+      <div className="space-y-4 md:space-y-6 md:mt-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl md:text-4xl font-bold text-foreground">
             Tests & Scores
           </h1>
 
@@ -323,254 +467,74 @@ export default function TestsPage() {
 
         {/* Filters - Desktop */}
         {!isMobile && tests.length > 0 && (
-          <div className="flex gap-2">
-            <Select value={subtestFilter} onValueChange={setSubtestFilter}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Sous-test" />
-              </SelectTrigger>
-              <SelectContent>
-                {SUBTESTS.map((subtest) => (
-                  <SelectItem key={subtest.value} value={subtest.value}>
-                    {subtest.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {TEST_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <div className="flex flex-wrap gap-2">
+              {SUBTESTS.map((subtest) => (
+                <button
+                  key={subtest.value}
+                  onClick={() => setSubtestFilter(subtest.value)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors backdrop-blur-sm ${
+                    subtestFilter === subtest.value
+                      ? 'border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-background/60 text-primary shadow-sm'
+                      : 'border-border/50 bg-background/40 text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                >
+                  {subtest.label}
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto flex gap-2">
+              {TEST_TYPES.map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => setTypeFilter(type.value)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors backdrop-blur-sm ${
+                    typeFilter === type.value
+                      ? 'border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-background/60 text-primary shadow-sm'
+                      : 'border-border/50 bg-background/40 text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Stats - Carte ultra fine - Desktop only */}
-      {!isMobile && tests.length > 0 && (
-        <Card className="bg-muted/50">
-          <CardContent className="p-0">
-            <div className="flex items-center justify-around divide-x divide-border">
-              <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
-                <span className="text-xs">📊</span>
-                <span className="text-base font-bold text-foreground">{tests.length}</span>
-              </div>
-              <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
-                <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                <span className="text-base font-bold text-primary">{overallAverage.toFixed(1)}</span>
-              </div>
-              <div className="flex flex-1 items-center justify-center gap-1.5 py-2">
-                <Target className="h-3.5 w-3.5 text-primary" />
-                <span className="text-base font-bold text-primary">
-                  {Math.max(...tests.map((t: Test) => t.score))}
-                </span>
-              </div>
+      {isMobile ? (
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'individual' | 'full')}
+          className="w-full"
+        >
+          <TabsContent value="individual" className="space-y-4">
+            {individualMobileContent}
+          </TabsContent>
+          <TabsContent value="full" className="space-y-4">
+            {fullMobileContent}
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="space-y-10">
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                Tests individuels ({filteredTests.length})
+              </h2>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Progress Chart - Desktop only */}
-      {!isMobile && (tests.length > 0 || fullTests.length > 0) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Évolution globale</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProgressChart tests={tests} fullTests={fullTests} showFullTests={true} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats by Subtest - Desktop only */}
-      {!isMobile && statsBySubtest && Object.keys(statsBySubtest).length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(statsBySubtest).map(([subtest, stats]) => (
-            <Card key={subtest}>
-              <CardHeader>
-                <CardTitle>{SUBTEST_LABELS[subtest] || subtest}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Moyenne</span>
-                  <span className="font-semibold">
-                    {(stats.totalScore / stats.count).toFixed(1)}/15
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Meilleur score</span>
-                  <span className="font-semibold">{stats.bestScore}/15</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Dernier score</span>
-                  <span className="font-semibold">{stats.lastScore}/15</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Tests</span>
-                  <span className="font-semibold">{stats.count}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+            {individualDesktopContent}
+          </section>
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                Tests complets ({fullTests.length})
+              </h2>
+            </div>
+            {fullDesktopContent}
+          </section>
         </div>
       )}
-
-      {/* Tabs for Individual vs Full Tests */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'individual' | 'full')} className="w-full">
-        {/* Desktop: afficher les tabs ici */}
-        {!isMobile && (
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="individual">
-              Tests individuels ({tests.length})
-            </TabsTrigger>
-            <TabsTrigger value="full">
-              Tests complets ({fullTests.length})
-            </TabsTrigger>
-          </TabsList>
-        )}
-
-        {/* Individual Tests Tab */}
-        <TabsContent value="individual" className="space-y-4">
-          {tests && tests.length > 0 ? (
-            <div className="space-y-2">
-              <h2 className="text-base font-semibold text-foreground">
-                Historique ({filteredTests.length})
-              </h2>
-              {filteredTests.length > 0 ? (
-                <div className="divide-y divide-border">
-                  {filteredTests.map((test: TestWithAttempts) => (
-                    <div 
-                      key={test.id} 
-                      className="flex items-center justify-between py-3 cursor-pointer hover:bg-muted/50 rounded-lg px-2 -mx-2 transition-colors"
-                      onClick={() => handleTestClick(test)}
-                    >
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">
-                            {test.name || SUBTEST_LABELS[test.subtest] || test.subtest}
-                          </span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className={`text-xs font-medium ${
-                            test.type === 'Blanc' 
-                              ? 'text-primary'
-                              : 'text-muted-foreground'
-                          }`}>
-                            {test.type}
-                          </span>
-                          {test.attempts.length > 0 && (
-                            <>
-                              <span className="text-xs text-muted-foreground">•</span>
-                              <span className="text-xs text-muted-foreground">
-                                {test.attempts.length + 1} tentative{test.attempts.length > 0 ? 's' : ''}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(test.date).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                          {test.duration_minutes && ` • ${test.duration_minutes} min`}
-                        </p>
-                        {test.notes && (
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {test.notes}
-                          </p>
-                        )}
-                      </div>
-                      <span className="ml-4 text-2xl font-bold text-primary">{test.score}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Aucun test ne correspond aux filtres sélectionnés
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Plus className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">Aucun test individuel</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Ajoutez votre premier test individuel
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Full Tests Tab */}
-        <TabsContent value="full" className="space-y-4">
-          {fullTests && fullTests.length > 0 ? (
-            <div className="space-y-4">
-              {fullTests.map((fullTest) => (
-                <Card 
-                  key={fullTest.id}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => setSelectedFullTest(fullTest)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1 flex-1 min-w-0">
-                        <CardTitle className="text-lg truncate">{fullTest.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(fullTest.date).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-3xl font-bold text-primary">
-                          {fullTest.total_score}
-                        </div>
-                        <p className="text-xs text-muted-foreground">/ 600</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Détails des sous-tests en mode compact */}
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                      {fullTest.subtests.map((subtest: FullTestSubtest) => (
-                        <div key={subtest.id} className="flex items-center justify-between">
-                          <span className="text-muted-foreground">
-                            {SUBTEST_LABELS[subtest.subtest] || subtest.subtest}
-                          </span>
-                          <span className="font-semibold">{subtest.score}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Plus className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">Aucun test complet</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Ajoutez votre premier test complet (6 sous-tests)
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
 
       {/* Test Attempts Modal */}
       <TestAttemptsModal
@@ -593,5 +557,3 @@ export default function TestsPage() {
     </div>
   )
 }
-
-

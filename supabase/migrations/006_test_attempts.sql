@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS test_attempts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   test_id UUID NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
   date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 15),
+  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 60),
   duration_minutes INTEGER,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
+import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 
 const FULL_TEST_SUBTESTS = [
   { key: 'comprehension', label: 'CDT' },
@@ -166,7 +167,8 @@ export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProp
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+    <form onSubmit={handleSubmit} className="space-y-4 pb-32">
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-foreground">Nom du test</h3>
         <Input
@@ -232,11 +234,15 @@ export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProp
         />
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Enregistrer
-      </Button>
     </form>
+    
+    <FloatingButtonsContainer>
+      <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
+        {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+        Enregistrer
+      </FloatingButton>
+    </FloatingButtonsContainer>
+    </>
   )
 }
 

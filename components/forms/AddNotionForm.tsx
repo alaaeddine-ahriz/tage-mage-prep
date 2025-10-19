@@ -18,6 +18,7 @@ import { calculateNextReviewDate } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Loader2, Image as ImageIcon, X } from 'lucide-react'
+import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 
 import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
 
@@ -138,7 +139,8 @@ export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+    <form onSubmit={handleSubmit} className="space-y-4 pb-32">
       {/* Image Upload */}
       <div className="space-y-2">
         <Label>Photo (optionnel)</Label>
@@ -224,11 +226,15 @@ export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
         />
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Créer
-      </Button>
     </form>
+    
+    <FloatingButtonsContainer>
+      <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
+        {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+        Créer
+      </FloatingButton>
+    </FloatingButtonsContainer>
+    </>
   )
 }
 

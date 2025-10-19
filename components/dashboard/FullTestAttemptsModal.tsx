@@ -218,7 +218,7 @@ export function FullTestAttemptsModal({ test, open, onOpenChange, onSuccess }: F
                   </div>
                   
                   {/* Détails des sous-tests */}
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs pl-2">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs pl-0">
                     {attempt.subtests.map((subtest) => (
                       <div key={subtest.id} className="flex items-center justify-between">
                         <span className="text-muted-foreground">

@@ -95,11 +95,11 @@ export default function ProfilePage() {
   const isDarkMode = resolvedTheme === 'dark'
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 md:space-y-12 md:pt-4">
       {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Profil</h1>
-        <p className="text-sm text-muted-foreground">{userEmail}</p>
+      <div className="space-y-1 md:space-y-2 md:mt-6">
+        <h1 className="text-2xl md:text-4xl font-bold text-foreground">Profil</h1>
+        <p className="text-sm md:text-base text-muted-foreground">{userEmail}</p>
       </div>
 
       {/* Résumé */}
@@ -126,7 +126,7 @@ export default function ProfilePage() {
               <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
                 Score moyen
               </div>
-              <div className="text-2xl font-bold text-foreground">{averageScore}/15</div>
+              <div className="text-2xl font-bold text-foreground">{averageScore}/60</div>
             </div>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
@@ -180,7 +180,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <span className={`ml-3 font-semibold ${color}`}>
-                    {test.score}/15
+                    {test.score}/60
                   </span>
                 </div>
               )

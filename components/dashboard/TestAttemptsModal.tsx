@@ -63,7 +63,7 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
       const { error } = await (supabase as any).from('test_attempts').insert({
         test_id: test.id,
         date: new Date(newAttempt.date).toISOString(),
-        score: parseInt(newAttempt.score),
+        score: parseInt(newAttempt.score) * 4, // Convert to score out of 60
         duration_minutes: newAttempt.duration_minutes ? parseInt(newAttempt.duration_minutes) : null,
         notes: newAttempt.notes || null,
       })
@@ -185,7 +185,7 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="score">Score (/15)</Label>
+            <Label htmlFor="score">Bonnes réponses (/60)</Label>
             <Input
               id="score"
               type="number"
@@ -196,6 +196,9 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
               placeholder="0"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Score : {parseInt(newAttempt.score) * 4 || 0}/60
+            </p>
           </div>
 
           <div className="space-y-2">

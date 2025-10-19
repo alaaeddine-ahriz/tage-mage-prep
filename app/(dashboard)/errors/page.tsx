@@ -164,11 +164,11 @@ export default function ErrorsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-10 md:pt-4">
       {/* Header */}
-      <div className="space-y-4">
+      <div className="space-y-4 md:space-y-6 md:mt-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl md:text-4xl font-bold text-foreground">
             Erreurs
           </h1>
 
@@ -227,10 +227,10 @@ export default function ErrorsPage() {
               <button
                 key={subtest.value}
                 onClick={() => setFilter(subtest.value)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors backdrop-blur-sm ${
                   filter === subtest.value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground'
+                    ? 'border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-background/60 text-primary shadow-sm'
+                    : 'border-border/50 bg-background/40 text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary'
                 }`}
               >
                 {subtest.label}
@@ -653,5 +653,3 @@ export default function ErrorsPage() {
     </div>
   )
 }
-
-

@@ -8,7 +8,7 @@ CREATE TABLE tests (
   date TIMESTAMP DEFAULT NOW(),
   type VARCHAR(10) NOT NULL CHECK (type IN ('TD', 'Blanc')),
   subtest VARCHAR(50) NOT NULL,
-  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 15),
+  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 60),
   duration_minutes INTEGER,
   notes TEXT,
   created_at TIMESTAMP DEFAULT NOW()
