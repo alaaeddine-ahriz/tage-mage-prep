@@ -1,0 +1,46 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import * as React from 'react'
+
+interface FloatingButtonsContainerProps {
+  children: React.ReactNode
+  className?: string
+}
+
+export function FloatingButtonsContainer({ children, className }: FloatingButtonsContainerProps) {
+  return (
+    <div className={cn('fixed bottom-28 left-0 right-0 px-4 pb-0 z-[60]', className)}>
+      <div className="flex gap-3">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+interface FloatingButtonProps extends Omit<React.ComponentProps<typeof Button>, 'variant'> {
+  variant?: 'default' | 'destructive' | 'outline' | 'success'
+}
+
+export function FloatingButton({ className, variant = 'default', ...props }: FloatingButtonProps) {
+  const variantStyles = {
+    default: 'backdrop-blur-xl bg-primary/85 hover:bg-primary/95 border border-primary-foreground/10 text-primary-foreground',
+    destructive: 'backdrop-blur-xl bg-destructive/85 hover:bg-destructive/95 border border-destructive-foreground/10 text-destructive-foreground',
+    success: 'backdrop-blur-xl bg-success/85 hover:bg-success/95 border border-success-foreground/10 text-success-foreground',
+    outline: 'backdrop-blur-xl bg-background/85 hover:bg-background/95 border border-border',
+  }
+
+  return (
+    <Button
+      variant={variant as any}
+      className={cn(
+        'flex-1 h-14 text-base font-semibold rounded-full shadow-2xl transition-all duration-300',
+        variantStyles[variant],
+        className
+      )}
+      {...props}
+    />
+  )
+}
+

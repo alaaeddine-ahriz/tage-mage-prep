@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Loader2, Plus, TrendingUp, X } from 'lucide-react'
@@ -100,19 +101,34 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
     <>
       {!showAddForm ? (
         <div className="space-y-4">
-          {/* Stats compactes */}
-          <div className="flex items-center justify-around py-3 bg-muted/30 rounded-lg">
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Tentatives</div>
-              <div className="text-xl font-bold">{allAttempts.length}</div>
+          {/* Stats modernes */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <div className="relative">
+                <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                  Tentatives
+                </div>
+                <div className="text-2xl font-bold text-foreground">{allAttempts.length}</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Meilleur</div>
-              <div className="text-xl font-bold text-primary">{bestScore}</div>
+            <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+              <div className="relative">
+                <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                  Meilleur
+                </div>
+                <div className="text-2xl font-bold text-primary">{bestScore}</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Moyenne</div>
-              <div className="text-xl font-bold">{averageScore.toFixed(1)}</div>
+            <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <div className="relative">
+                <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
+                  Moyenne
+                </div>
+                <div className="text-2xl font-bold text-foreground">{averageScore.toFixed(1)}</div>
+              </div>
             </div>
           </div>
 
@@ -213,34 +229,29 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
   const footerView = (
     <>
       {!showAddForm ? (
-        <Button
-          onClick={() => setShowAddForm(true)}
-          className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg"
-        >
+        <FloatingButton onClick={() => setShowAddForm(true)} className="w-full">
           <Plus className="mr-2 h-5 w-5" />
           Ajouter un score
-        </Button>
+        </FloatingButton>
       ) : (
-        <div className="flex gap-3">
-          <Button
+        <>
+          <FloatingButton
             type="button"
             onClick={handleAddAttempt}
             disabled={loading || !newAttempt.score}
-            className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg"
           >
             {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
             Enregistrer
-          </Button>
-          <Button
+          </FloatingButton>
+          <FloatingButton
             type="button"
             variant="outline"
             onClick={() => setShowAddForm(false)}
             disabled={loading}
-            className="h-14 text-base font-semibold rounded-2xl shadow-lg"
           >
             Annuler
-          </Button>
-        </div>
+          </FloatingButton>
+        </>
       )}
     </>
   )
@@ -292,9 +303,9 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
       </div>
 
       {/* Footer - Flottant au dessus de la navbar */}
-      <div className="fixed bottom-28 left-0 right-0 px-4 pb-4 z-[60]">
+      <FloatingButtonsContainer>
         {footerView}
-      </div>
+      </FloatingButtonsContainer>
     </div>
   )
 }

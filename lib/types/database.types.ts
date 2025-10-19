@@ -140,6 +140,58 @@ export interface Database {
           created_at?: string
         }
       }
+      full_test_attempts: {
+        Row: {
+          id: string
+          full_test_id: string
+          date: string
+          total_score: number
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          full_test_id: string
+          date?: string
+          total_score: number
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          full_test_id?: string
+          date?: string
+          total_score?: number
+          notes?: string | null
+          created_at?: string
+        }
+      }
+      full_test_attempt_subtests: {
+        Row: {
+          id: string
+          attempt_id: string
+          subtest: string
+          correct_answers: number
+          score: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          attempt_id: string
+          subtest: string
+          correct_answers: number
+          score: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          attempt_id?: string
+          subtest?: string
+          correct_answers?: number
+          score?: number
+          created_at?: string
+        }
+      }
       errors: {
         Row: {
           id: string
@@ -263,23 +315,16 @@ export type Test = Database['public']['Tables']['tests']['Row']
 export type TestAttempt = Database['public']['Tables']['test_attempts']['Row']
 export type FullTest = Database['public']['Tables']['full_tests']['Row']
 export type FullTestSubtest = Database['public']['Tables']['full_test_subtests']['Row']
-export type FullTestAttempt = {
-  id: string
-  full_test_id: string
-  date: string
-  total_score: number
-  notes: string | null
-  created_at: string
+export type FullTestAttemptRow = Database['public']['Tables']['full_test_attempts']['Row']
+export type FullTestAttemptSubtestRow = Database['public']['Tables']['full_test_attempt_subtests']['Row']
+
+// Full test attempt with subtests
+export interface FullTestAttempt extends FullTestAttemptRow {
   subtests: FullTestAttemptSubtest[]
 }
-export type FullTestAttemptSubtest = {
-  id: string
-  attempt_id: string
-  subtest: string
-  correct_answers: number
-  score: number
-  created_at: string
-}
+
+// Alias for subtest
+export type FullTestAttemptSubtest = FullTestAttemptSubtestRow
 export type Error = Database['public']['Tables']['errors']['Row']
 export type Notion = Database['public']['Tables']['notions']['Row']
 export type NotionReview = Database['public']['Tables']['notion_reviews']['Row']

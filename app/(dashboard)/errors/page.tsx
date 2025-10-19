@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { MobileCarousel } from '@/components/ui/mobile-carousel'
 import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
+import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { AddErrorForm } from '@/components/forms/AddErrorForm'
 import { Plus, Clock, CheckCircle, Loader2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
@@ -608,26 +609,22 @@ export default function ErrorsPage() {
 
       {/* Fixed Action Buttons - Mobile */}
       {isMobile && selectedError && (
-        <div className="fixed bottom-28 left-0 right-0 px-4 pb-4 z-[60]">
-          <div className="flex gap-3">
-            <Button
-              variant="destructive"
-              onClick={() => handleReview(false, selectedError)}
-              disabled={updating}
-              className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg"
-            >
-              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Oublié'}
-            </Button>
-            <Button
-              variant="success"
-              onClick={() => handleReview(true, selectedError)}
-              disabled={updating}
-              className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg"
-            >
-              {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Je sais'}
-            </Button>
-          </div>
-        </div>
+        <FloatingButtonsContainer>
+          <FloatingButton
+            variant="destructive"
+            onClick={() => handleReview(false, selectedError)}
+            disabled={updating}
+          >
+            {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Oublié'}
+          </FloatingButton>
+          <FloatingButton
+            variant="success"
+            onClick={() => handleReview(true, selectedError)}
+            disabled={updating}
+          >
+            {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Je sais'}
+          </FloatingButton>
+        </FloatingButtonsContainer>
       )}
     </div>
   )
