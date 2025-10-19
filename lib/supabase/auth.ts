@@ -2,6 +2,27 @@
 
 import { createClient } from './client'
 
+export async function signInWithEmail(email: string, password: string, isSignUp: boolean = false) {
+  const supabase = createClient()
+  
+  if (isSignUp) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      }
+    })
+    return { data, error }
+  } else {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    return { data, error }
+  }
+}
+
 export async function signInWithGoogle() {
   const supabase = createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({

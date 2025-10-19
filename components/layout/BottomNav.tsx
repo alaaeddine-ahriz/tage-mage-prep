@@ -2,21 +2,22 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FileText, AlertCircle, Brain } from 'lucide-react'
+import { FileText, AlertCircle, Brain, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Tests', href: '/tests', icon: FileText },
   { name: 'Erreurs', href: '/errors', icon: AlertCircle },
   { name: 'Notions', href: '/notions', icon: Brain },
+  { name: 'Profil', href: '/', icon: User },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card md:hidden">
-      <div className="grid h-16 grid-cols-3">
+    <nav className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 md:hidden w-[80%] max-w-md">
+      <div className="grid h-16 grid-cols-4 rounded-full border border-amber-200 dark:border-primary/20 bg-card/60 backdrop-blur-2xl shadow-2xl shadow-amber-500/10 dark:shadow-primary/10 px-2">
         {navigation.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
           return (
@@ -24,14 +25,19 @@ export function BottomNav() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 transition-colors',
+                'relative flex items-center justify-center rounded-full transition-all duration-300 ease-out',
                 isActive
-                  ? 'text-primary'
+                  ? 'text-amber-600 dark:text-primary'
                   : 'text-muted-foreground hover:text-primary'
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.name}</span>
+              {isActive && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-amber-600 dark:bg-primary rounded-full" />
+              )}
+              <item.icon className={cn(
+                'h-6 w-6 transition-all duration-300',
+                isActive && 'scale-110'
+              )} />
             </Link>
           )
         })}

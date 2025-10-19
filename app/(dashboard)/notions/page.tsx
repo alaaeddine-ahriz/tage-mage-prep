@@ -472,7 +472,7 @@ export default function NotionsPage() {
           {(item) => {
             const notion = item as Notion
             return (
-              <div className="space-y-6 pb-32">
+              <div className="space-y-6 pb-40">
                 {/* Badge subtest */}
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold capitalize bg-primary/10 text-primary">
@@ -532,7 +532,7 @@ export default function NotionsPage() {
 
       {/* Fixed Action Buttons - Mobile */}
       {isMobile && selectedNotion && (
-        <div className="fixed bottom-16 left-0 right-0 px-4 pb-4 z-[60]">
+        <div className="fixed bottom-28 left-0 right-0 px-4 pb-4 z-[60]">
           <div className="flex gap-3">
             <Button
               variant="destructive"

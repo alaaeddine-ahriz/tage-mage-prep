@@ -101,16 +101,31 @@ export function MobileCarousel({
 
   return (
     <div className="fixed inset-0 z-50 bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 backdrop-blur-sm px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {currentIndex + 1} / {items.length}
-          </span>
-        </div>
+      {/* Header with indicator */}
+      <div className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between border-b bg-background/95 backdrop-blur-sm px-4 py-3">
+        <div className="flex-1" />
+
+        {/* Navigation Dots */}
+        {items.length > 1 && (
+          <div className="flex justify-center gap-2">
+            {items.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => onIndexChange(index)}
+                className={cn(
+                  "h-2 rounded-full transition-all",
+                  index === currentIndex
+                    ? "w-8 bg-primary"
+                    : "w-2 bg-muted-foreground/30"
+                )}
+                aria-label={`Aller à l'item ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Navigation arrows for desktop */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-1 justify-end">
           <Button
             variant="ghost"
             size="icon"
@@ -144,7 +159,7 @@ export function MobileCarousel({
       <div
         ref={containerRef}
         className={cn(
-          "h-[calc(100vh-60px)] overflow-y-auto bg-background",
+          "h-screen overflow-y-auto bg-background pt-[60px]",
           className
         )}
         onTouchStart={onTouchStart}
@@ -156,24 +171,6 @@ export function MobileCarousel({
         </div>
       </div>
 
-      {/* Mobile Navigation Dots */}
-      {items.length > 1 && (
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center gap-2 bg-background/95 backdrop-blur-sm border-t px-4 py-3 sm:hidden">
-          {items.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => onIndexChange(index)}
-              className={cn(
-                "h-2 rounded-full transition-all",
-                index === currentIndex
-                  ? "w-8 bg-primary"
-                  : "w-2 bg-muted-foreground/30"
-              )}
-              aria-label={`Aller à l'item ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
 
       {/* Side navigation buttons for mobile (tap zones) - only if multiple items */}
       {items.length > 1 && (
