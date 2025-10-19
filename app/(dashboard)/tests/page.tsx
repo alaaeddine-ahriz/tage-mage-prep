@@ -17,7 +17,7 @@ import { AddTestForm } from '@/components/forms/AddTestForm'
 import { AddFullTestForm } from '@/components/forms/AddFullTestForm'
 import { TestAttemptsModal } from '@/components/dashboard/TestAttemptsModal'
 import { FullTestAttemptsModal } from '@/components/dashboard/FullTestAttemptsModal'
-import { Plus, Loader2, TrendingUp, Target, ChevronRight } from 'lucide-react'
+import { Plus, Loader2, TrendingUp, Target } from 'lucide-react'
 import { ProgressChart } from '@/components/charts/ProgressChart'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { Test, FullTestWithSubtests, TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
@@ -35,7 +35,6 @@ export default function TestsPage() {
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFullTestFormOpen, setIsFullTestFormOpen] = useState(false)
-  const [retakeTest, setRetakeTest] = useState<FullTestWithSubtests | null>(null)
   const [selectedTest, setSelectedTest] = useState<TestWithAttempts | null>(null)
   const [selectedFullTest, setSelectedFullTest] = useState<FullTestWithAttempts | null>(null)
   const [subtestFilter, setSubtestFilter] = useState('all')
@@ -157,12 +156,6 @@ export default function TestsPage() {
   const handleFullTestFormSuccess = () => {
     loadFullTests()
     setIsFullTestFormOpen(false)
-    setRetakeTest(null)
-  }
-
-  const handleRetakeTest = (fullTest: FullTestWithSubtests) => {
-    setRetakeTest(fullTest)
-    setIsFullTestFormOpen(true)
   }
 
   const handleTestClick = (test: TestWithAttempts) => {
@@ -170,16 +163,14 @@ export default function TestsPage() {
   }
 
   // Filter tests
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredTests = tests.filter((test: any) => {
+  const filteredTests = tests.filter((test) => {
     const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
     const matchesType = typeFilter === 'all' || test.type === typeFilter
     return matchesSubtest && matchesType
   })
 
   // Calculate stats by subtest
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const statsBySubtest = tests?.reduce((acc, test: any) => {
+  const statsBySubtest = tests?.reduce((acc, test) => {
     if (!acc[test.subtest]) {
       acc[test.subtest] = {
         count: 0,
@@ -237,28 +228,16 @@ export default function TestsPage() {
               
               <MobileFormSheet
                 open={isFullTestFormOpen}
-                onOpenChange={(open) => {
-                  setIsFullTestFormOpen(open)
-                  if (!open) setRetakeTest(null)
-                }}
-                title={retakeTest ? `Refaire : ${retakeTest.name}` : "Nouveau test complet"}
+                onOpenChange={setIsFullTestFormOpen}
+                title="Nouveau test complet"
                 trigger={
-                  <Button onClick={() => {
-                    setRetakeTest(null)
-                    setIsFullTestFormOpen(true)
-                  }}>
+                  <Button onClick={() => setIsFullTestFormOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Test complet
                   </Button>
                 }
               >
-                <AddFullTestForm 
-                  onSuccess={handleFullTestFormSuccess}
-                  existingTest={retakeTest ? {
-                    name: retakeTest.name,
-                    subtests: retakeTest.subtests
-                  } : undefined}
-                />
+                <AddFullTestForm onSuccess={handleFullTestFormSuccess} />
               </MobileFormSheet>
             </div>
           )}
@@ -333,28 +312,16 @@ export default function TestsPage() {
             {activeTab === 'full' && (
               <MobileFormSheet
                 open={isFullTestFormOpen}
-                onOpenChange={(open) => {
-                  setIsFullTestFormOpen(open)
-                  if (!open) setRetakeTest(null)
-                }}
-                title={retakeTest ? `Refaire : ${retakeTest.name}` : "Nouveau test complet"}
+                onOpenChange={setIsFullTestFormOpen}
+                title="Nouveau test complet"
                 trigger={
-                  <Button onClick={() => {
-                    setRetakeTest(null)
-                    setIsFullTestFormOpen(true)
-                  }} className="w-full">
+                  <Button onClick={() => setIsFullTestFormOpen(true)} className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
                     Ajouter un test complet
                   </Button>
                 }
               >
-                <AddFullTestForm 
-                  onSuccess={handleFullTestFormSuccess}
-                  existingTest={retakeTest ? {
-                    name: retakeTest.name,
-                    subtests: retakeTest.subtests
-                  } : undefined}
-                />
+                <AddFullTestForm onSuccess={handleFullTestFormSuccess} />
               </MobileFormSheet>
             )}
           </div>

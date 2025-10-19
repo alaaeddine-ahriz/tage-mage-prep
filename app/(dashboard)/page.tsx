@@ -6,12 +6,23 @@ import { Target, TrendingUp, AlertCircle, Brain, Calendar, Loader2 } from 'lucid
 import { Button } from '@/components/ui/button'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
 
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { Notion, Error as ErrorType } from '@/lib/types/database.types'
+
+interface Test {
+  id: string
+  score: number
+  date: string
+  subtest: string
+  type: string
+}
+
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
-  const [tests, setTests] = useState<any[]>([])
-  const [errorsDue, setErrorsDue] = useState<any[]>([])
-  const [notionsDue, setNotionsDue] = useState<any[]>([])
-  const [notions, setNotions] = useState<any[]>([])
+  const [tests, setTests] = useState<Test[]>([])
+  const [errorsDue, setErrorsDue] = useState<ErrorType[]>([])
+  const [notionsDue, setNotionsDue] = useState<Notion[]>([])
+  const [notions, setNotions] = useState<Notion[]>([])
   const [userEmail, setUserEmail] = useState<string>('Utilisateur')
 
   useEffect(() => {
