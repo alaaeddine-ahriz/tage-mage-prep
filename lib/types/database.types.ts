@@ -209,7 +209,8 @@ export interface Database {
           explanation: string | null
           title: string | null
           mastery_level: number
-          next_review_at: string
+          last_reviewed_at: string | null
+          next_review_at: string | null
           review_count: number
           understood: boolean
           reviewed_at: string | null
@@ -226,7 +227,8 @@ export interface Database {
           explanation?: string | null
           title?: string | null
           mastery_level?: number
-          next_review_at?: string
+          last_reviewed_at?: string | null
+          next_review_at?: string | null
           review_count?: number
           understood?: boolean
           reviewed_at?: string | null
@@ -243,7 +245,8 @@ export interface Database {
           explanation?: string | null
           title?: string | null
           mastery_level?: number
-          next_review_at?: string
+          last_reviewed_at?: string | null
+          next_review_at?: string | null
           review_count?: number
           understood?: boolean
           reviewed_at?: string | null
