@@ -42,40 +42,34 @@ export default function ErrorsPage() {
   const isMobile = useIsMobile(1500)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
+  const isLoading = !errors
+  const errorsList = errors ?? []
 
   useEffect(() => {
-    if (!errors || !selectedError) return
-    const updated = errors.find((err) => err.id === selectedError.id)
+    if (!selectedError) return
+    const updated = errorsList.find((err) => err.id === selectedError.id)
     if (updated && updated !== selectedError) {
       setSelectedError(updated)
     }
-  }, [errors, selectedError])
+  }, [errorsList, selectedError])
 
   const handleFormSuccess = () => {
     setIsFormOpen(false)
   }
 
-  if (!errors) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   const errorsDue = useMemo(
-    () => errors.filter((error) => isDueForReview(error.next_review_at)),
-    [errors]
+    () => errorsList.filter((error) => isDueForReview(error.next_review_at)),
+    [errorsList]
   )
 
   const errorsUpcoming = useMemo(
-    () => errors.filter((error) => !isDueForReview(error.next_review_at)),
-    [errors]
+    () => errorsList.filter((error) => !isDueForReview(error.next_review_at)),
+    [errorsList]
   )
 
   const errorsMastered = useMemo(
-    () => errors.filter((error) => error.mastery_level >= 4),
-    [errors]
+    () => errorsList.filter((error) => error.mastery_level >= 4),
+    [errorsList]
   )
 
   const filteredErrorsDue = useMemo(
@@ -164,6 +158,14 @@ export default function ErrorsPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 md:space-y-10 md:pt-4">
       {/* Header */}
@@ -250,7 +252,7 @@ export default function ErrorsPage() {
               <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
                 Total
               </div>
-              <div className="text-2xl font-bold text-foreground">{errors.length}</div>
+              <div className="text-2xl font-bold text-foreground">{errorsList.length}</div>
             </div>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
@@ -406,7 +408,7 @@ export default function ErrorsPage() {
         </div>
       ) : null}
 
-      {errors.length > 0 &&
+      {errorsList.length > 0 &&
         filteredErrorsDue.length === 0 &&
         filteredErrorsUpcoming.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
@@ -415,7 +417,7 @@ export default function ErrorsPage() {
         )}
 
       {/* Empty State */}
-      {errors.length === 0 && (
+      {errorsList.length === 0 && (
         <Card className="mt-8">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Clock className="h-12 w-12 text-muted-foreground mb-4" />

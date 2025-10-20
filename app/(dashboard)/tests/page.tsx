@@ -38,24 +38,27 @@ export default function TestsPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [activeTab, setActiveTab] = useState<'individual' | 'full'>('individual')
   const isMobile = useIsMobile()
+  const isLoading = !tests || !fullTests
+  const testsList = tests ?? []
+  const fullTestsList = fullTests ?? []
 
   useEffect(() => {
-    if (!tests || !selectedTest) return
-    const updated = tests.find((test) => test.id === selectedTest.id)
+    if (!selectedTest) return
+    const updated = testsList.find((test) => test.id === selectedTest.id)
     if (updated && updated !== selectedTest) {
       setSelectedTest(updated)
     }
-  }, [tests, selectedTest])
+  }, [testsList, selectedTest])
 
   useEffect(() => {
-    if (!fullTests || !selectedFullTest) return
-    const updated = fullTests.find((test) => test.id === selectedFullTest.id)
+    if (!selectedFullTest) return
+    const updated = fullTestsList.find((test) => test.id === selectedFullTest.id)
     if (updated && updated !== selectedFullTest) {
       setSelectedFullTest(updated)
     }
-  }, [fullTests, selectedFullTest])
+  }, [fullTestsList, selectedFullTest])
 
-  if (!tests || !fullTests) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -78,11 +81,13 @@ export default function TestsPage() {
   }
 
   // Filter tests
-  const filteredTests = tests.filter((test) => {
-    const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
-    const matchesType = typeFilter === 'all' || test.type === typeFilter
-    return matchesSubtest && matchesType
-  })
+  const filteredTests = useMemo(() => {
+    return testsList.filter((test) => {
+      const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
+      const matchesType = typeFilter === 'all' || test.type === typeFilter
+      return matchesSubtest && matchesType
+    })
+  }, [testsList, subtestFilter, typeFilter])
 
   const emptyIndividualState = (
     <Card>
@@ -156,7 +161,7 @@ export default function TestsPage() {
         ))}
       </div>
     ) : (
-      tests.length > 0 && (
+      testsList.length > 0 && (
         <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
           Aucun test ne correspond aux filtres sélectionnés.
         </div>
@@ -164,7 +169,7 @@ export default function TestsPage() {
     )
 
   const individualMobileContent =
-    tests.length > 0 ? (
+    testsList.length > 0 ? (
       <div className="space-y-2">
         <h2 className="text-base font-semibold text-foreground">
           Historique ({filteredTests.length})
@@ -175,12 +180,12 @@ export default function TestsPage() {
       emptyIndividualState
     )
 
-  const individualDesktopContent = tests.length > 0 ? individualListContent : emptyIndividualState
+  const individualDesktopContent = testsList.length > 0 ? individualListContent : emptyIndividualState
 
   const fullListContent =
-    fullTests.length > 0 ? (
+    fullTestsList.length > 0 ? (
       <div className="divide-y divide-border">
-        {fullTests.map((fullTest) => (
+        {fullTestsList.map((fullTest) => (
           <div
             key={fullTest.id}
             className="flex w-full items-center justify-between py-3 cursor-pointer hover:bg-muted/50 px-0 transition-colors"
@@ -238,7 +243,7 @@ export default function TestsPage() {
         ))}
       </div>
     ) : (
-      fullTests.length === 0 ? emptyFullState : (
+      fullTestsList.length === 0 ? emptyFullState : (
         <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
           Aucun test ne correspond aux filtres sélectionnés.
         </div>
@@ -246,10 +251,10 @@ export default function TestsPage() {
     )
 
   const fullMobileContent =
-    fullTests.length > 0 ? (
+    fullTestsList.length > 0 ? (
       <div className="space-y-2">
         <h2 className="text-base font-semibold text-foreground">
-          Historique ({fullTests.length})
+          Historique ({fullTestsList.length})
         </h2>
         {fullListContent}
       </div>
@@ -302,21 +307,21 @@ export default function TestsPage() {
         </div>
 
         {/* Tabs selector - Mobile uniquement, juste sous le titre */}
-        {isMobile && (tests.length > 0 || fullTests.length > 0) && (
+        {isMobile && (testsList.length > 0 || fullTestsList.length > 0) && (
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'individual' | 'full')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="individual">
-                Individuels ({tests.length})
+                Individuels ({testsList.length})
               </TabsTrigger>
               <TabsTrigger value="full">
-                Complets ({fullTests.length})
+                Complets ({fullTestsList.length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
         )}
 
         {/* Filters - Mobile sous les tabs */}
-        {isMobile && (tests.length > 0 || fullTests.length > 0) && (
+        {isMobile && (testsList.length > 0 || fullTestsList.length > 0) && (
           <div className="flex gap-2">
             {activeTab === 'individual' && (
               <>
@@ -380,7 +385,7 @@ export default function TestsPage() {
         )}
 
         {/* Filters - Desktop */}
-        {!isMobile && tests.length > 0 && (
+        {!isMobile && testsList.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <div className="flex flex-wrap gap-2">
               {SUBTESTS.map((subtest) => (
@@ -442,7 +447,7 @@ export default function TestsPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">
-                Tests complets ({fullTests.length})
+                Tests complets ({fullTestsList.length})
               </h2>
             </div>
             {fullDesktopContent}

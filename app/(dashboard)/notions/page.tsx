@@ -42,31 +42,25 @@ export default function NotionsPage() {
   const isMobile = useIsMobile(1500)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
+  const isLoading = !notions
+  const notionsList = notions ?? []
 
   useEffect(() => {
-    if (!notions || !selectedNotion) return
-    const updated = notions.find((notion) => notion.id === selectedNotion.id)
+    if (!selectedNotion) return
+    const updated = notionsList.find((notion) => notion.id === selectedNotion.id)
     if (updated && updated !== selectedNotion) {
       setSelectedNotion(updated)
     }
-  }, [notions, selectedNotion])
+  }, [notionsList, selectedNotion])
 
   const handleFormSuccess = () => {
     setIsFormOpen(false)
   }
 
-  if (!notions) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   // Filter notions by subtest
   const filteredNotions = useMemo(
-    () => (filter === 'all' ? notions : notions.filter((n) => n.subtest === filter)),
-    [filter, notions]
+    () => (filter === 'all' ? notionsList : notionsList.filter((n) => n.subtest === filter)),
+    [filter, notionsList]
   )
 
   const notionsDue = useMemo(
@@ -151,7 +145,15 @@ export default function NotionsPage() {
   }
 
   const combinedFiltersEmpty =
-    notions.length > 0 && notionsDue.length === 0 && notionsUpcoming.length === 0
+    notionsList.length > 0 && notionsDue.length === 0 && notionsUpcoming.length === 0
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 md:space-y-10 md:pt-4">
@@ -211,7 +213,7 @@ export default function NotionsPage() {
         )}
 
         {/* Filtres - Desktop */}
-        {!showMobileFilters && notions.length > 0 && (
+        {!showMobileFilters && notionsList.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {SUBTESTS.map((subtest) => (
               <button
@@ -239,7 +241,7 @@ export default function NotionsPage() {
               <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
                 Total
               </div>
-              <div className="text-2xl font-bold text-foreground">{notions?.length || 0}</div>
+              <div className="text-2xl font-bold text-foreground">{notionsList.length}</div>
             </div>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
@@ -258,8 +260,8 @@ export default function NotionsPage() {
                 Niveau moyen
               </div>
               <div className="text-2xl font-bold text-foreground">
-                {notions && notions.length > 0
-                  ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
+                {notionsList.length > 0
+                  ? (notionsList.reduce((acc: number, n) => acc + n.mastery_level, 0) / notionsList.length).toFixed(1)
                   : '0.0'}
               </div>
             </div>
@@ -402,7 +404,7 @@ export default function NotionsPage() {
         )}
 
       {/* Empty State */}
-      {notions?.length === 0 && (
+      {notionsList.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground" />
