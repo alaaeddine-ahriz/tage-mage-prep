@@ -42,6 +42,7 @@ export default function ErrorsPage() {
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
   const isMobile = useIsMobile(1500)
   const hasBottomNav = useIsMobile(768)
+  const showMobileFilters = useIsMobile()
 
   useEffect(() => {
     loadErrors()
@@ -176,7 +177,7 @@ export default function ErrorsPage() {
             Erreurs
           </h1>
 
-          {!isMobile && (
+          {!showMobileFilters && (
             <MobileFormSheet
               open={isFormOpen}
               onOpenChange={setIsFormOpen}
@@ -194,7 +195,7 @@ export default function ErrorsPage() {
         </div>
 
         {/* Filtres + Bouton - Mobile */}
-        {isMobile && (
+        {showMobileFilters && (
           <div className="flex gap-2">
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="flex-1">
@@ -225,7 +226,7 @@ export default function ErrorsPage() {
         )}
 
         {/* Filtres - Desktop */}
-        {!isMobile && (
+        {!showMobileFilters && (
           <div className="flex flex-wrap gap-2">
             {SUBTESTS.map((subtest) => (
               <button
@@ -343,13 +344,7 @@ export default function ErrorsPage() {
             ))}
           </div>
         </div>
-      ) : (
-        errorsDue.length > 0 && (
-          <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
-            Aucun résultat ne correspond aux filtres sélectionnés.
-          </div>
-        )
-      )}
+      ) : null}
 
       {/* Upcoming Errors */}
       {filteredErrorsUpcoming.length > 0 ? (
@@ -419,13 +414,15 @@ export default function ErrorsPage() {
             ))}
           </div>
         </div>
-      ) : (
-        errorsUpcoming.length > 0 && (
+      ) : null}
+
+      {errors.length > 0 &&
+        filteredErrorsDue.length === 0 &&
+        filteredErrorsUpcoming.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
             Aucun résultat ne correspond aux filtres sélectionnés.
           </div>
-        )
-      )}
+        )}
 
       {/* Empty State */}
       {errors.length === 0 && !loading && (

@@ -41,6 +41,7 @@ export default function NotionsPage() {
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
   const isMobile = useIsMobile(1500)
   const hasBottomNav = useIsMobile(768)
+  const showMobileFilters = useIsMobile()
 
   useEffect(() => {
     loadNotions()
@@ -166,7 +167,7 @@ export default function NotionsPage() {
             Notions
           </h1>
 
-          {!isMobile && (
+          {!showMobileFilters && (
             <MobileFormSheet
               open={isFormOpen}
               onOpenChange={setIsFormOpen}
@@ -184,7 +185,7 @@ export default function NotionsPage() {
         </div>
 
         {/* Filtres + Bouton - Mobile */}
-        {isMobile && (
+        {showMobileFilters && (
           <div className="flex gap-2">
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="flex-1">
@@ -215,7 +216,7 @@ export default function NotionsPage() {
         )}
 
         {/* Filtres - Desktop */}
-        {!isMobile && notions.length > 0 && (
+        {!showMobileFilters && notions.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {SUBTESTS.map((subtest) => (
               <button
@@ -399,11 +400,13 @@ export default function NotionsPage() {
         </div>
       )}
 
-      {filteredNotions.length === 0 && notions.length > 0 && (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
-          Aucune notion ne correspond aux filtres sélectionnés.
-        </div>
-      )}
+      {notions.length > 0 &&
+        notionsDue.length === 0 &&
+        notionsUpcoming.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+            Aucune notion ne correspond aux filtres sélectionnés.
+          </div>
+        )}
 
       {/* Empty State */}
       {notions?.length === 0 && (

@@ -63,7 +63,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-80" />
             <div className="relative space-y-6">
               <div className="space-y-2 text-left">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-3xl font-semibold text-foreground">
                   {isSignUp ? 'Créer un compte' : 'Se connecter'}
                 </h2>
                 <p className="text-sm text-muted-foreground">

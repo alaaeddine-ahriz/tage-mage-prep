@@ -167,7 +167,7 @@ export default function ProfilePage() {
           <div className="divide-y divide-border">
             {tests.slice(0, 5).map((test) => {
               const pct = (test.score / 15) * 100
-              const color = pct < 40 ? 'text-destructive' : pct < 70 ? 'text-amber-500' : 'text-green-500'
+              const color = pct < 60 ? 'text-destructive' : pct < 80 ? 'text-amber-500' : 'text-green-500'
 
               return (
                 <div key={test.id} className="flex items-center justify-between py-3">
@@ -191,7 +191,7 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-      
+
       {/* Mobile: Theme Toggle & Sign Out - At the bottom */}
       {isMobile && (
         <div className="flex gap-3">
