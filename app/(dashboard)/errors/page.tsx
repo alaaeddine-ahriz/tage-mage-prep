@@ -48,7 +48,7 @@ export default function ErrorsPage() {
   const [errorToDelete, setErrorToDelete] = useState<SupabaseError | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1200)
+  const isMobile = useIsMobile(1250)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !errors

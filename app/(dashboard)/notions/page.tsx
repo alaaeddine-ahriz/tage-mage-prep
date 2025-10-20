@@ -48,7 +48,7 @@ export default function NotionsPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [filter, setFilter] = useState('all')
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1200)
+  const isMobile = useIsMobile(1250)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !notions
