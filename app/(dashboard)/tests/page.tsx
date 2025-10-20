@@ -41,6 +41,13 @@ export default function TestsPage() {
   const isLoading = !tests || !fullTests
   const testsList = useMemo(() => tests ?? [], [tests])
   const fullTestsList = useMemo(() => fullTests ?? [], [fullTests])
+  const filteredTests = useMemo(() => {
+    return testsList.filter((test) => {
+      const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
+      const matchesType = typeFilter === 'all' || test.type === typeFilter
+      return matchesSubtest && matchesType
+    })
+  }, [testsList, subtestFilter, typeFilter])
 
   useEffect(() => {
     if (!selectedTest) return
@@ -79,15 +86,6 @@ export default function TestsPage() {
   const handleTestClick = (test: TestWithAttempts) => {
     setSelectedTest(test)
   }
-
-  // Filter tests
-  const filteredTests = useMemo(() => {
-    return testsList.filter((test) => {
-      const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
-      const matchesType = typeFilter === 'all' || test.type === typeFilter
-      return matchesSubtest && matchesType
-    })
-  }, [testsList, subtestFilter, typeFilter])
 
   const emptyIndividualState = (
     <Card>
