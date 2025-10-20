@@ -113,7 +113,7 @@ export default function ProfilePage() {
 
       {/* Résumé */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Résumé</h2>
+        <h2 className="text-xl sm:text-3xl font-semibold text-foreground">Résumé</h2>
 
         {/* Progression globale */}
         <div className="space-y-2">
@@ -169,12 +169,15 @@ export default function ProfilePage() {
       </div>
 
       {/* Calendrier des activités */}
-      <WorkCalendar tests={tests} fullTests={fullTestsList} />
+      <div className="space-y-3">
+        <h2 className="text-xl sm:text-3xl font-semibold text-foreground">Activités récentes</h2>
+        <WorkCalendar tests={tests} fullTests={fullTestsList} />
+      </div>
 
       {/* Historique des tests */}
       {tests.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">Derniers tests</h2>
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">Derniers tests</h2>
           <div className="divide-y divide-border">
             {tests.slice(0, 5).map((test) => {
               const pct = (test.score / 15) * 100
