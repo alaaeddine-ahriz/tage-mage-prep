@@ -13,6 +13,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -20,7 +22,8 @@ import { MobileCarousel } from '@/components/ui/mobile-carousel'
 import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { AddNotionForm } from '@/components/forms/AddNotionForm'
-import { Plus, Clock, TrendingUp, Loader2 } from 'lucide-react'
+import { EditNotionForm } from '@/components/forms/EditNotionForm'
+import { Plus, Clock, TrendingUp, Loader2, PenLine, Trash2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
@@ -37,9 +40,14 @@ export default function NotionsPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [notionToEdit, setNotionToEdit] = useState<Notion | null>(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [notionToDelete, setNotionToDelete] = useState<Notion | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [filter, setFilter] = useState('all')
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1500)
+  const isMobile = useIsMobile(1200)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !notions
@@ -82,6 +90,47 @@ export default function NotionsPage() {
     // Find index in the combined list for carousel
     const index = combinedNotions.findIndex((n) => n.id === notion.id)
     setCurrentIndex(index >= 0 ? index : 0)
+  }
+
+  const openEditNotion = (notion: Notion) => {
+    setNotionToEdit(notion)
+    setIsEditFormOpen(true)
+  }
+
+  const openDeleteNotion = (notion: Notion) => {
+    setNotionToDelete(notion)
+    setIsDeleteConfirmOpen(true)
+  }
+
+  const handleDeleteNotion = async () => {
+    if (!notionToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        toast.error('Vous devez être connecté')
+        return
+      }
+
+      const { error } = await supabase.from('notions').delete().eq('id', notionToDelete.id)
+      if (error) throw error
+
+      toast.success('Notion supprimée')
+      await refreshNotions()
+      setSelectedNotion(null)
+      setIsDeleteConfirmOpen(false)
+      setNotionToDelete(null)
+    } catch (error) {
+      console.error('Error deleting notion:', error)
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
 
@@ -423,10 +472,28 @@ export default function NotionsPage() {
         }}>
           {selectedNotion && (
             <DialogContent className="max-w-lg">
-              <DialogHeader>
+              <DialogHeader className="gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <DialogTitle className="text-sm text-muted-foreground">
                   {SUBTEST_LABELS[selectedNotion.subtest] || selectedNotion.subtest}
                 </DialogTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditNotion(selectedNotion)}
+                  >
+                    <PenLine className="mr-2 h-4 w-4" />
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => openDeleteNotion(selectedNotion)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </Button>
+                </div>
               </DialogHeader>
 
               <div className="space-y-4">
@@ -618,6 +685,63 @@ export default function NotionsPage() {
           onClose={() => setFullscreenImage(null)}
         />
       )}
+
+      <MobileFormSheet
+        open={isEditFormOpen}
+        onOpenChange={(open) => {
+          setIsEditFormOpen(open)
+          if (!open) {
+            setNotionToEdit(null)
+          }
+        }}
+        title="Modifier la notion"
+      >
+        {notionToEdit && (
+          <EditNotionForm
+            notion={notionToEdit}
+            onSuccess={() => {
+              setIsEditFormOpen(false)
+              setNotionToEdit(null)
+            }}
+          />
+        )}
+      </MobileFormSheet>
+
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={(open) => {
+          setIsDeleteConfirmOpen(open)
+          if (!open) {
+            setNotionToDelete(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Supprimer la notion ?</DialogTitle>
+            <DialogDescription>
+              Cette action est définitive. La notion et son historique de révision seront supprimés.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteNotion}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

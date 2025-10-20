@@ -125,6 +125,11 @@ export default function TestsPage() {
                 <span className="text-sm font-medium text-foreground">
                   {test.name || SUBTEST_LABELS[test.subtest] || test.subtest}
                 </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {SUBTEST_LABELS[test.subtest] || test.subtest}
+                </span>
                 <span className="text-xs text-muted-foreground">•</span>
                 <span
                   className={`text-xs font-medium ${
@@ -194,14 +199,14 @@ export default function TestsPage() {
                 <span className="text-sm font-medium text-foreground">
                   {fullTest.name}
                 </span>
-                <span className="text-xs text-muted-foreground">•</span>
+                {/* <span className="text-xs text-muted-foreground">•</span>
                 <span
                   className={`text-xs font-medium ${
                     fullTest.type === 'Blanc' ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >
                   {fullTest.type}
-                </span>
+                </span> */}
                 {fullTest.attempts && fullTest.attempts.length > 0 && (
                   <>
                     <span className="text-xs text-muted-foreground">•</span>

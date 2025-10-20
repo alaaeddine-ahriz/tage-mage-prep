@@ -13,6 +13,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -20,7 +22,8 @@ import { MobileCarousel } from '@/components/ui/mobile-carousel'
 import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { AddErrorForm } from '@/components/forms/AddErrorForm'
-import { Plus, Clock, CheckCircle, Loader2 } from 'lucide-react'
+import { EditErrorForm } from '@/components/forms/EditErrorForm'
+import { Plus, Clock, CheckCircle, Loader2, PenLine, Trash2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
@@ -38,8 +41,13 @@ export default function ErrorsPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [errorToEdit, setErrorToEdit] = useState<SupabaseError | null>(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [errorToDelete, setErrorToDelete] = useState<SupabaseError | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1500)
+  const isMobile = useIsMobile(1200)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !errors
@@ -98,6 +106,47 @@ export default function ErrorsPage() {
     setFullscreenImage(null)
     const index = combinedFilteredErrors.findIndex((e) => e.id === error.id)
     setCurrentIndex(index >= 0 ? index : 0)
+  }
+
+  const openEditError = (error: SupabaseError) => {
+    setErrorToEdit(error)
+    setIsEditFormOpen(true)
+  }
+
+  const openDeleteError = (error: SupabaseError) => {
+    setErrorToDelete(error)
+    setIsDeleteConfirmOpen(true)
+  }
+
+  const handleDeleteError = async () => {
+    if (!errorToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        toast.error('Vous devez être connecté')
+        return
+      }
+
+      const { error } = await supabase.from('errors').delete().eq('id', errorToDelete.id)
+      if (error) throw error
+
+      toast.success('Erreur supprimée')
+      await refreshErrors()
+      setSelectedError(null)
+      setIsDeleteConfirmOpen(false)
+      setErrorToDelete(null)
+    } catch (error) {
+      console.error('Error deleting error:', error)
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleReview = async (success: boolean, errorToReview?: SupabaseError) => {
@@ -438,10 +487,28 @@ export default function ErrorsPage() {
         }}>
           {selectedError && (
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
+              <DialogHeader className="gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <DialogTitle className="text-sm text-muted-foreground">
                   {SUBTEST_LABELS[selectedError.subtest] || selectedError.subtest}
                 </DialogTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditError(selectedError)}
+                  >
+                    <PenLine className="mr-2 h-4 w-4" />
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => openDeleteError(selectedError)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </Button>
+                </div>
               </DialogHeader>
 
               <div className="space-y-4">
@@ -542,24 +609,13 @@ export default function ErrorsPage() {
                   )}
                 </div>
 
-                {/* Main content - different layout if image exists */}
+                {/* Main content */}
                 {!error.image_url ? (
-                  // No image: text-only layout similar to notions
-                  <>
-                    {/* Title from correct answer when provided */}
-                    {error.correct_answer && (
-                      <h2 className="text-3xl font-bold text-foreground leading-tight">
-                        {error.correct_answer}
-                      </h2>
-                    )}
-                    
-                    {/* Additional explanation if correct_answer exists */}
-                    {error.explanation && (
-                      <p className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
-                        {error.explanation}
-                      </p>
-                    )}
-                  </>
+                  error.explanation && (
+                    <p className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
+                      {error.explanation}
+                    </p>
+                  )
                 ) : (
                   // With image: traditional layout
                   <>
@@ -652,6 +708,63 @@ export default function ErrorsPage() {
           </FloatingButton>
         </FloatingButtonsContainer>
       )}
+
+      <MobileFormSheet
+        open={isEditFormOpen}
+        onOpenChange={(open) => {
+          setIsEditFormOpen(open)
+          if (!open) {
+            setErrorToEdit(null)
+          }
+        }}
+        title="Modifier l'erreur"
+      >
+        {errorToEdit && (
+          <EditErrorForm
+            error={errorToEdit}
+            onSuccess={() => {
+              setIsEditFormOpen(false)
+              setErrorToEdit(null)
+            }}
+          />
+        )}
+      </MobileFormSheet>
+
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={(open) => {
+          setIsDeleteConfirmOpen(open)
+          if (!open) {
+            setErrorToDelete(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Supprimer l'erreur ?</DialogTitle>
+            <DialogDescription>
+              Cette action est irréversible. L'erreur et son historique de révision seront supprimés.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteError}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {fullscreenImage && (
         <FullscreenImageViewer
