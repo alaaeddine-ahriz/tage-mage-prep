@@ -1,16 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  CalendarDays,
-  CalendarRange,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SUBTEST_LABELS, SUBTEST_OPTIONS } from '@/lib/constants/subtests'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import type {
@@ -235,21 +229,19 @@ export function WorkCalendar({
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           {!isMobile && (
-            <Tabs
-              value={view}
-              onValueChange={(value) => setView(value as CalendarView)}
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={() => setView((prev) => (prev === 'month' ? 'week' : 'month'))}
+              aria-label={view === 'month' ? 'Afficher la vue semaine' : 'Afficher la vue mois'}
+              title={view === 'month' ? 'Vue semaine' : 'Vue mois'}
             >
-              <TabsList>
-                <TabsTrigger value="month">
-                  <CalendarDays className="size-4" />
-                  Mois
-                </TabsTrigger>
-                <TabsTrigger value="week">
-                  <CalendarRange className="size-4" />
-                  Semaine
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+              {view === 'month' ? (
+                <span className="text-sm font-semibold">M</span>
+              ) : (
+                <span className="text-sm font-semibold">S</span>
+              )}
+            </Button>
           )}
           <Button
             variant="outline"

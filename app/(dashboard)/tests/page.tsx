@@ -441,7 +441,7 @@ export default function TestsPage() {
         <div className="space-y-10">
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
                 Tests individuels ({filteredTests.length})
               </h2>
             </div>
@@ -449,7 +449,7 @@ export default function TestsPage() {
           </section>
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
                 Tests complets ({fullTestsList.length})
               </h2>
             </div>

@@ -334,7 +334,7 @@ export default function ErrorsPage() {
       {/* Errors to Review */}
       {filteredErrorsDue.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
             À réviser aujourd&apos;hui ({filteredErrorsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -397,7 +397,7 @@ export default function ErrorsPage() {
       {/* Upcoming Errors */}
       {filteredErrorsUpcoming.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
             Prochaines révisions ({filteredErrorsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
