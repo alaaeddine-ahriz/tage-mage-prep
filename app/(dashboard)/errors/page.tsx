@@ -216,9 +216,6 @@ export default function ErrorsPage() {
     )
   }
 
-  const selectedErrorNextReview = selectedError?.next_review_at
-    ? new Date(selectedError.next_review_at)
-    : null
   const selectedErrorLastReview = selectedError?.last_reviewed_at
     ? new Date(selectedError.last_reviewed_at)
     : null

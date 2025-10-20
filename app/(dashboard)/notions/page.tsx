@@ -197,9 +197,6 @@ export default function NotionsPage() {
   const combinedFiltersEmpty =
     notionsList.length > 0 && notionsDue.length === 0 && notionsUpcoming.length === 0
 
-  const selectedNotionNextReview = selectedNotion?.next_review_at
-    ? new Date(selectedNotion.next_review_at)
-    : null
   const selectedNotionLastReview = selectedNotion?.last_reviewed_at
     ? new Date(selectedNotion.last_reviewed_at)
     : null
