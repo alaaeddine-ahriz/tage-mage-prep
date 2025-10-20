@@ -643,11 +643,11 @@ function buildDayMap(
     const summary = ensureDay(date)
     const subtests = (fullTest.subtests ?? []).map((subtest) => ({
       subtest: subtest.subtest,
-      score: typeof subtest.score === 'number' ? subtest.score : null,
+      score: typeof subtest.score === 'number' ? subtest.score : 0,
       correct_answers:
         typeof subtest.correct_answers === 'number'
           ? subtest.correct_answers
-          : null,
+          : 0,
     }))
 
     const item: CalendarFullTestItem = {
