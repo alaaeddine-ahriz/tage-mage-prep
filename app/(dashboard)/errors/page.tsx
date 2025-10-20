@@ -357,7 +357,7 @@ export default function ErrorsPage() {
                 <button
                   onClick={() => openErrorModal(error)}
                   className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
-                  aria-label="Voir l'erreur"
+                  aria-label="Voir l&rsquo;erreur"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -420,7 +420,7 @@ export default function ErrorsPage() {
                 <button
                   onClick={() => openErrorModal(error)}
                   className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
-                  aria-label="Voir l'erreur"
+                  aria-label="Voir l&rsquo;erreur"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -497,7 +497,7 @@ export default function ErrorsPage() {
           {selectedError && (
             <DialogContent className="max-w-4xl" showCloseButton={false}>
               <DialogHeader className="sr-only">
-                <DialogTitle>Détail de l'erreur</DialogTitle>
+                <DialogTitle>Détail de l&rsquo;erreur</DialogTitle>
               </DialogHeader>
 
               <div className="flex flex-col gap-6">
@@ -743,7 +743,7 @@ export default function ErrorsPage() {
             setErrorToEdit(null)
           }
         }}
-        title="Modifier l'erreur"
+        title="Modifier l&rsquo;erreur"
       >
         {errorToEdit && (
           <EditErrorForm
@@ -767,9 +767,9 @@ export default function ErrorsPage() {
       >
         <DialogContent className="max-w-sm" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Supprimer l'erreur ?</DialogTitle>
+            <DialogTitle>Supprimer l&rsquo;erreur ?</DialogTitle>
             <DialogDescription>
-              Cette action est irréversible. L'erreur et son historique de révision seront supprimés.
+              Cette action est irréversible. L&rsquo;erreur et son historique de révision seront supprimés.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-end">
