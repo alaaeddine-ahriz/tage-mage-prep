@@ -1,70 +1,75 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Calendar, Loader2, LogOut, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
-import { Notion, Error as ErrorType } from '@/lib/types/database.types'
+import {
+  Notion,
+  Error as ErrorType,
+  TestWithAttempts,
+  FullTestWithAttempts,
+} from '@/lib/types/database.types'
 import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { signOut } from '@/lib/supabase/auth'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-
-interface Test {
-  id: string
-  name: string
-  score: number
-  date: string
-  subtest: string
-  type: string
-}
+import { useDashboardData } from '@/lib/state/dashboard-data'
+import { WorkCalendar } from '@/components/dashboard/WorkCalendar'
 
 export default function ProfilePage() {
-  const [loading, setLoading] = useState(true)
-  const [tests, setTests] = useState<Test[]>([])
-  const [errorsDue, setErrorsDue] = useState<ErrorType[]>([])
-  const [notionsDue, setNotionsDue] = useState<Notion[]>([])
-  const [notions, setNotions] = useState<Notion[]>([])
   const [userEmail, setUserEmail] = useState<string>('Utilisateur')
   const { theme, setTheme, resolvedTheme } = useTheme()
   const router = useRouter()
   const isMobile = useIsMobile()
+  const {
+    tests: testsData,
+    fullTests,
+    errors,
+    notions,
+    isInitializing,
+  } = useDashboardData()
+
+  const tests = (testsData ?? []) as TestWithAttempts[]
+  const fullTestsList = (fullTests ?? []) as FullTestWithAttempts[]
+  const notionsList = (notions ?? []) as Notion[]
 
   useEffect(() => {
-    loadData()
+    const fetchUserEmail = async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (user?.email) setUserEmail(user.email)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    void fetchUserEmail()
   }, [])
 
-  const loadData = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email) setUserEmail(user.email)
+  const errorsDue = useMemo(() => {
+    const now = new Date()
+    const list = (errors ?? []) as ErrorType[]
+    return list.filter(
+      (error) =>
+        error.next_review_at && new Date(error.next_review_at) <= now
+    )
+  }, [errors])
 
-      const [
-        { data: testsData },
-        { data: errorsDueData },
-        { data: notionsDueData },
-        { data: notionsData }
-      ] = await Promise.all([
-        supabase.from('tests').select('*').eq('user_id', user!.id).order('date', { ascending: false }),
-        supabase.from('errors').select('*').eq('user_id', user!.id).lte('next_review_at', new Date().toISOString()),
-        supabase.from('notions').select('*').eq('user_id', user!.id).lte('next_review_at', new Date().toISOString()),
-        supabase.from('notions').select('*').eq('user_id', user!.id)
-      ])
+  const notionsDue = useMemo(() => {
+    const now = new Date()
+    const list = (notions ?? []) as Notion[]
+    return list.filter(
+      (notion) =>
+        notion.next_review_at && new Date(notion.next_review_at) <= now
+    )
+  }, [notions])
 
-      setTests(testsData || [])
-      setErrorsDue(errorsDueData || [])
-      setNotionsDue(notionsDueData || [])
-      setNotions(notionsData || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
+  if (isInitializing) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -76,8 +81,11 @@ export default function ProfilePage() {
     ? (tests.reduce((acc, t) => acc + t.score, 0) / tests.length).toFixed(1)
     : '0.0'
 
-  const mastered = notions.filter((n) => n.mastery_level >= 4).length
-  const masteryPct = notions.length > 0 ? Math.round((mastered / notions.length) * 100) : 0
+  const mastered = notionsList.filter((n) => n.mastery_level >= 4).length
+  const masteryPct =
+    notionsList.length > 0
+      ? Math.round((mastered / notionsList.length) * 100)
+      : 0
 
   const handleSignOut = async () => {
     await signOut()
@@ -160,6 +168,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Calendrier des activités */}
+      <WorkCalendar tests={tests} fullTests={fullTestsList} />
+
       {/* Historique des tests */}
       {tests.length > 0 && (
         <div className="space-y-3">
@@ -179,7 +190,7 @@ export default function ProfilePage() {
                       <Calendar className="h-3 w-3" />
                       <span>{new Date(test.date).toLocaleDateString('fr-FR')}</span>
                       <span>•</span>
-                      <span className="capitalize">{test.type}</span>
+                      <span className="capitalize">{test.type || '—'}</span>
                     </div>
                   </div>
                   <span className={`ml-3 font-semibold ${color}`}>
