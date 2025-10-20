@@ -100,7 +100,7 @@ export function MobileCarousel({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-background">
+    <div className="fixed inset-0 z-50 bg-background overscroll-contain touch-pan-y">
       {/* Header with indicator */}
       <div className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between border-b bg-background/95 backdrop-blur-sm px-4 py-3">
         <div className="flex-1" />
@@ -159,7 +159,7 @@ export function MobileCarousel({
       <div
         ref={containerRef}
         className={cn(
-          "h-screen overflow-y-auto bg-background pt-[60px]",
+          "min-h-[100dvh] overflow-y-auto overscroll-contain touch-pan-y bg-background pt-[60px]",
           className
         )}
         onTouchStart={onTouchStart}
@@ -200,4 +200,3 @@ export function MobileCarousel({
     </div>
   )
 }
-
