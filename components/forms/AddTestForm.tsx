@@ -38,6 +38,9 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
     notes: '',
   })
 
+  const maxScore = formData.type === 'Blanc' ? 60 : 15
+  const scoreLabel = formData.type === 'Blanc' ? 'Score (/60)' : 'Bonnes réponses (/15)'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmedName = formData.name.trim()
@@ -73,13 +76,16 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         finalName = `${baseName} #${(count ?? 0) + 1}`
       }
 
+      const scoreValue = parseInt(formData.score)
+      const normalizedScore = formData.type === 'TD' ? scoreValue * 4 : scoreValue
+
       const { error } = await supabase.from('tests').insert({
         user_id: user.id,
         date: new Date(formData.date).toISOString(),
         type: formData.type,
         subtest: formData.subtest,
         name: finalName,
-        score: parseInt(formData.score) * 4,
+        score: normalizedScore,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
         notes: formData.notes || null,
       })
@@ -186,12 +192,13 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="score">Bonnes réponses (/15)</Label>
+        <Label htmlFor="score">{scoreLabel}</Label>
         <Input
           id="score"
           type="number"
           min="0"
-          max="15"
+          max={maxScore}
+          step="1"
           value={formData.score}
           onChange={(e) => setFormData({ ...formData, score: e.target.value })}
           placeholder="0"
