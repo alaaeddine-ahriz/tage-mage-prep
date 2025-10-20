@@ -159,9 +159,10 @@ export function MobileCarousel({
       <div
         ref={containerRef}
         className={cn(
-          "min-h-[100dvh] overflow-y-auto overscroll-contain touch-pan-y bg-background pt-[60px]",
+          "h-screen overflow-y-auto overscroll-contain touch-pan-y bg-background pt-[60px]",
           className
         )}
+        style={{ height: '100dvh' }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
