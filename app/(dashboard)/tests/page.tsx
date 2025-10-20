@@ -39,8 +39,8 @@ export default function TestsPage() {
   const [activeTab, setActiveTab] = useState<'individual' | 'full'>('individual')
   const isMobile = useIsMobile()
   const isLoading = !tests || !fullTests
-  const testsList = tests ?? []
-  const fullTestsList = fullTests ?? []
+  const testsList = useMemo(() => tests ?? [], [tests])
+  const fullTestsList = useMemo(() => fullTests ?? [], [fullTests])
 
   useEffect(() => {
     if (!selectedTest) return

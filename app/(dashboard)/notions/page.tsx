@@ -43,7 +43,7 @@ export default function NotionsPage() {
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !notions
-  const notionsList = notions ?? []
+  const notionsList = useMemo(() => notions ?? [], [notions])
 
   useEffect(() => {
     if (!selectedNotion) return

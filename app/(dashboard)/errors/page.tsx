@@ -43,7 +43,7 @@ export default function ErrorsPage() {
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !errors
-  const errorsList = errors ?? []
+  const errorsList = useMemo(() => errors ?? [], [errors])
 
   useEffect(() => {
     if (!selectedError) return
