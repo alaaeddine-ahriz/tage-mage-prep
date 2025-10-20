@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -14,6 +13,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -21,72 +22,116 @@ import { MobileCarousel } from '@/components/ui/mobile-carousel'
 import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { AddNotionForm } from '@/components/forms/AddNotionForm'
-import { Plus, Clock, TrendingUp, Loader2 } from 'lucide-react'
+import { EditNotionForm } from '@/components/forms/EditNotionForm'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Plus, Clock, TrendingUp, Loader2, MoreHorizontal, PenLine, Trash2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-import type { Notion } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 import Image from 'next/image'
 import { FullscreenImageViewer } from '@/components/ui/fullscreen-image-viewer'
+import { useDashboardData } from '@/lib/state/dashboard-data'
+import type { Notion } from '@/lib/types/database.types'
+import { createClient } from '@/lib/supabase/client'
 
 export default function NotionsPage() {
-  const [notions, setNotions] = useState<Notion[]>([])
-  const [loading, setLoading] = useState(true)
+  const { notions, refreshNotions } = useDashboardData()
   const [selectedNotion, setSelectedNotion] = useState<Notion | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [notionToEdit, setNotionToEdit] = useState<Notion | null>(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [notionToDelete, setNotionToDelete] = useState<Notion | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [filter, setFilter] = useState('all')
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1500)
+  const isMobile = useIsMobile(1200)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
+  const isLoading = !notions
+  const notionsList = useMemo(() => notions ?? [], [notions])
 
   useEffect(() => {
-    loadNotions()
-  }, [])
-
-  const loadNotions = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
-        .from('notions')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('next_review_at', { ascending: true })
-
-      setNotions(data || [])
-    } catch (error) {
-      console.error('Error loading notions:', error)
-    } finally {
-      setLoading(false)
+    if (!selectedNotion) return
+    const updated = notionsList.find((notion) => notion.id === selectedNotion.id)
+    if (updated && updated !== selectedNotion) {
+      setSelectedNotion(updated)
     }
-  }
+  }, [notionsList, selectedNotion])
 
   const handleFormSuccess = () => {
-    loadNotions()
     setIsFormOpen(false)
   }
 
   // Filter notions by subtest
-  const filteredNotions = filter === 'all' 
-    ? notions 
-    : notions.filter((n) => n.subtest === filter)
+  const filteredNotions = useMemo(
+    () => (filter === 'all' ? notionsList : notionsList.filter((n) => n.subtest === filter)),
+    [filter, notionsList]
+  )
 
-  const notionsDue = filteredNotions.filter((n) => isDueForReview(n.next_review_at))
-  const notionsUpcoming = filteredNotions.filter((n) => !isDueForReview(n.next_review_at))
+  const notionsDue = useMemo(
+    () => filteredNotions.filter((n) => isDueForReview(n.next_review_at)),
+    [filteredNotions]
+  )
+  const notionsUpcoming = useMemo(
+    () => filteredNotions.filter((n) => !isDueForReview(n.next_review_at)),
+    [filteredNotions]
+  )
+  const combinedNotions = useMemo(
+    () => [...notionsDue, ...notionsUpcoming],
+    [notionsDue, notionsUpcoming]
+  )
 
   const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
     setFullscreenImage(null)
     // Find index in the combined list for carousel
-    const allNotions = [...notionsDue, ...notionsUpcoming]
-    const index = allNotions.findIndex(n => n.id === notion.id)
+    const index = combinedNotions.findIndex((n) => n.id === notion.id)
     setCurrentIndex(index >= 0 ? index : 0)
+  }
+
+  const openEditNotion = (notion: Notion) => {
+    setNotionToEdit(notion)
+    setIsEditFormOpen(true)
+  }
+
+  const openDeleteNotion = (notion: Notion) => {
+    setNotionToDelete(notion)
+    setIsDeleteConfirmOpen(true)
+  }
+
+  const handleDeleteNotion = async () => {
+    if (!notionToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        toast.error('Vous devez être connecté')
+        return
+      }
+
+      const { error } = await supabase.from('notions').delete().eq('id', notionToDelete.id)
+      if (error) throw error
+
+      toast.success('Notion supprimée')
+      await refreshNotions()
+      setSelectedNotion(null)
+      setIsDeleteConfirmOpen(false)
+      setNotionToDelete(null)
+    } catch (error) {
+      console.error('Error deleting notion:', error)
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
 
@@ -135,8 +180,7 @@ export default function NotionsPage() {
           : 'On révise demain !'
       )
 
-      // Reload notions
-      await loadNotions()
+      await refreshNotions()
       
       // In mobile carousel, don't close - just stay on same index
       if (!isMobile) {
@@ -150,7 +194,15 @@ export default function NotionsPage() {
     }
   }
 
-  if (loading) {
+  const combinedFiltersEmpty =
+    notionsList.length > 0 && notionsDue.length === 0 && notionsUpcoming.length === 0
+
+  const selectedNotionLastReview = selectedNotion?.last_reviewed_at
+    ? new Date(selectedNotion.last_reviewed_at)
+    : null
+  const selectedNotionHasImage = Boolean(selectedNotion?.image_url)
+
+  if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -216,7 +268,7 @@ export default function NotionsPage() {
         )}
 
         {/* Filtres - Desktop */}
-        {!showMobileFilters && notions.length > 0 && (
+        {!showMobileFilters && notionsList.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {SUBTESTS.map((subtest) => (
               <button
@@ -244,7 +296,7 @@ export default function NotionsPage() {
               <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
                 Total
               </div>
-              <div className="text-2xl font-bold text-foreground">{notions?.length || 0}</div>
+              <div className="text-2xl font-bold text-foreground">{notionsList.length}</div>
             </div>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
@@ -263,8 +315,8 @@ export default function NotionsPage() {
                 Niveau moyen
               </div>
               <div className="text-2xl font-bold text-foreground">
-                {notions && notions.length > 0
-                  ? (notions.reduce((acc: number, n) => acc + n.mastery_level, 0) / notions.length).toFixed(1)
+                {notionsList.length > 0
+                  ? (notionsList.reduce((acc: number, n) => acc + n.mastery_level, 0) / notionsList.length).toFixed(1)
                   : '0.0'}
               </div>
             </div>
@@ -400,16 +452,14 @@ export default function NotionsPage() {
         </div>
       )}
 
-      {notions.length > 0 &&
-        notionsDue.length === 0 &&
-        notionsUpcoming.length === 0 && (
+      {combinedFiltersEmpty && (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
             Aucune notion ne correspond aux filtres sélectionnés.
           </div>
         )}
 
       {/* Empty State */}
-      {notions?.length === 0 && (
+      {notionsList.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -427,60 +477,103 @@ export default function NotionsPage() {
           if (!open) setSelectedNotion(null)
         }}>
           {selectedNotion && (
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="text-sm text-muted-foreground">
-                  {SUBTEST_LABELS[selectedNotion.subtest] || selectedNotion.subtest}
-                </DialogTitle>
+            <DialogContent className="max-w-3xl" showCloseButton={false}>
+              <DialogHeader className="sr-only">
+                <DialogTitle>{selectedNotion.title}</DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4">
-                {selectedNotion.image_url && (
-                  <div className="relative w-full h-64 overflow-hidden rounded-lg border bg-muted">
-                    <Image
-                      src={selectedNotion.image_url}
-                      alt={selectedNotion.title || 'Notion'}
-                      fill
-                      className="object-contain"
-                    />
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      {SUBTEST_LABELS[selectedNotion.subtest] || selectedNotion.subtest}
+                    </span>
+                    {isDueForReview(selectedNotion.next_review_at) && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
+                        <Clock className="h-3.5 w-3.5" />
+                        À réviser
+                      </span>
+                    )}
+                    {selectedNotionLastReview && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                        Dernière révision{' '}
+                        {selectedNotionLastReview.toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    )}
                   </div>
-                )}
 
-                <h2 className="text-xl font-bold">{selectedNotion.title}</h2>
-
-                {selectedNotion.description && (
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {selectedNotion.description}
-                  </p>
-                )}
-
-                <div className="flex gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Niveau:</span>{' '}
-                    <span className="font-medium">{selectedNotion.mastery_level}/5</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Révisions:</span>{' '}
-                    <span className="font-medium">{selectedNotion.review_count}</span>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem
+                        onClick={() => openEditNotion(selectedNotion)}
+                        className="cursor-pointer"
+                      >
+                        <PenLine className="mr-2 h-4 w-4" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => openDeleteNotion(selectedNotion)}
+                        className="cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col gap-5">
+                  <h2 className="text-3xl font-bold text-foreground leading-tight text-center sm:text-left">
+                    {selectedNotion.title}
+                  </h2>
+
+                  {selectedNotion.description && (
+                    <p className="text-base leading-relaxed text-muted-foreground whitespace-pre-wrap text-left">
+                      {selectedNotion.description}
+                    </p>
+                  )}
+
+                  {selectedNotionHasImage && (
+                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border bg-muted/40">
+                      <Image
+                        src={selectedNotion.image_url as string}
+                        alt={selectedNotion.title || 'Notion'}
+                        fill
+                        className="object-cover"
+                        sizes="(min-width: 768px) 620px, 90vw"
+                      />
+                    </div>
+                  )}
+
+                  {/* Stats card intentionally removed for cleaner layout */}
+                </div>
+
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:gap-4">
                   <Button
                     variant="destructive"
                     onClick={() => handleReview(false)}
                     disabled={updating}
-                    className="flex-1"
+                    className="w-full h-12 text-base font-semibold sm:flex-1"
                   >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
+                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Oublié'}
                   </Button>
                   <Button
                     variant="success"
                     onClick={() => handleReview(true)}
                     disabled={updating}
-                    className="flex-1"
+                    className="w-full h-12 text-base font-semibold sm:flex-1"
                   >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
+                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Je sais'}
                   </Button>
                 </div>
               </div>
@@ -497,12 +590,12 @@ export default function NotionsPage() {
             setSelectedNotion(null)
             setFullscreenImage(null)
           }}
-          items={[...notionsDue, ...notionsUpcoming]}
+          items={combinedNotions}
           currentIndex={currentIndex}
           onIndexChange={(index) => {
             setCurrentIndex(index)
-            const allNotions = [...notionsDue, ...notionsUpcoming]
-            setSelectedNotion(allNotions[index])
+            const nextNotion = combinedNotions[index] ?? null
+            setSelectedNotion(nextNotion)
             setFullscreenImage(null)
           }}
         >
@@ -623,6 +716,63 @@ export default function NotionsPage() {
           onClose={() => setFullscreenImage(null)}
         />
       )}
+
+      <MobileFormSheet
+        open={isEditFormOpen}
+        onOpenChange={(open) => {
+          setIsEditFormOpen(open)
+          if (!open) {
+            setNotionToEdit(null)
+          }
+        }}
+        title="Modifier la notion"
+      >
+        {notionToEdit && (
+          <EditNotionForm
+            notion={notionToEdit}
+            onSuccess={() => {
+              setIsEditFormOpen(false)
+              setNotionToEdit(null)
+            }}
+          />
+        )}
+      </MobileFormSheet>
+
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={(open) => {
+          setIsDeleteConfirmOpen(open)
+          if (!open) {
+            setNotionToDelete(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Supprimer la notion ?</DialogTitle>
+            <DialogDescription>
+              Cette action est définitive. La notion et son historique de révision seront supprimés.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteNotion}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

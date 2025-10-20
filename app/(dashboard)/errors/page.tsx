@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +13,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -21,87 +22,135 @@ import { MobileCarousel } from '@/components/ui/mobile-carousel'
 import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { AddErrorForm } from '@/components/forms/AddErrorForm'
-import { Plus, Clock, CheckCircle, Loader2 } from 'lucide-react'
+import { EditErrorForm } from '@/components/forms/EditErrorForm'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Plus, Clock, CheckCircle, Loader2, MoreHorizontal, PenLine, Trash2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import Image from 'next/image'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 import { FullscreenImageViewer } from '@/components/ui/fullscreen-image-viewer'
+import { createClient } from '@/lib/supabase/client'
+import { useDashboardData } from '@/lib/state/dashboard-data'
+import type { Error as SupabaseError } from '@/lib/types/database.types'
 
 export default function ErrorsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [errors, setErrors] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { errors, refreshErrors } = useDashboardData()
   const [filter, setFilter] = useState('all')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedError, setSelectedError] = useState<any>(null)
+  const [selectedError, setSelectedError] = useState<SupabaseError | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [errorToEdit, setErrorToEdit] = useState<SupabaseError | null>(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [errorToDelete, setErrorToDelete] = useState<SupabaseError | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1500)
+  const isMobile = useIsMobile(1200)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
+  const isLoading = !errors
+  const errorsList = useMemo(() => errors ?? [], [errors])
 
   useEffect(() => {
-    loadErrors()
-  }, [])
-
-  const loadErrors = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
-        .from('errors')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('next_review_at', { ascending: true })
-
-      setErrors(data || [])
-    } catch (error) {
-      console.error('Error loading errors:', error)
-    } finally {
-      setLoading(false)
+    if (!selectedError) return
+    const updated = errorsList.find((err) => err.id === selectedError.id)
+    if (updated && updated !== selectedError) {
+      setSelectedError(updated)
     }
-  }
+  }, [errorsList, selectedError])
 
   const handleFormSuccess = () => {
-    loadErrors()
     setIsFormOpen(false)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errorsDue = errors.filter((e: any) => isDueForReview(e.next_review_at))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errorsUpcoming = errors.filter((e: any) => !isDueForReview(e.next_review_at))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errorsMastered = errors.filter((e: any) => e.mastery_level >= 4)
+  const errorsDue = useMemo(
+    () => errorsList.filter((error) => isDueForReview(error.next_review_at)),
+    [errorsList]
+  )
 
-  const filteredErrorsDue = filter === 'all' 
-    ? errorsDue 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : errorsDue.filter((e: any) => e.subtest === filter)
+  const errorsUpcoming = useMemo(
+    () => errorsList.filter((error) => !isDueForReview(error.next_review_at)),
+    [errorsList]
+  )
 
-  const filteredErrorsUpcoming = filter === 'all' 
-    ? errorsUpcoming 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : errorsUpcoming.filter((e: any) => e.subtest === filter)
+  const errorsMastered = useMemo(
+    () => errorsList.filter((error) => error.mastery_level >= 4),
+    [errorsList]
+  )
 
-  const openErrorModal = (error: unknown) => {
+  const filteredErrorsDue = useMemo(
+    () =>
+      filter === 'all'
+        ? errorsDue
+        : errorsDue.filter((error) => error.subtest === filter),
+    [errorsDue, filter]
+  )
+
+  const filteredErrorsUpcoming = useMemo(
+    () =>
+      filter === 'all'
+        ? errorsUpcoming
+        : errorsUpcoming.filter((error) => error.subtest === filter),
+    [errorsUpcoming, filter]
+  )
+
+  const combinedFilteredErrors = useMemo(
+    () => [...filteredErrorsDue, ...filteredErrorsUpcoming],
+    [filteredErrorsDue, filteredErrorsUpcoming]
+  )
+
+  const openErrorModal = (error: SupabaseError) => {
     setSelectedError(error)
     setFullscreenImage(null)
-    // Find index in the combined list for carousel
-    const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const index = allErrors.findIndex((e: any) => (e as any).id === (error as any).id)
+    const index = combinedFilteredErrors.findIndex((e) => e.id === error.id)
     setCurrentIndex(index >= 0 ? index : 0)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleReview = async (success: boolean, errorToReview?: any) => {
+  const openEditError = (error: SupabaseError) => {
+    setErrorToEdit(error)
+    setIsEditFormOpen(true)
+  }
+
+  const openDeleteError = (error: SupabaseError) => {
+    setErrorToDelete(error)
+    setIsDeleteConfirmOpen(true)
+  }
+
+  const handleDeleteError = async () => {
+    if (!errorToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        toast.error('Vous devez être connecté')
+        return
+      }
+
+      const { error } = await supabase.from('errors').delete().eq('id', errorToDelete.id)
+      if (error) throw error
+
+      toast.success('Erreur supprimée')
+      await refreshErrors()
+      setSelectedError(null)
+      setIsDeleteConfirmOpen(false)
+      setErrorToDelete(null)
+    } catch (error) {
+      console.error('Error deleting error:', error)
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleReview = async (success: boolean, errorToReview?: SupabaseError) => {
     const error = errorToReview || selectedError
     if (!error) return
     setUpdating(true)
@@ -145,8 +194,7 @@ export default function ErrorsPage() {
           : 'On révise demain !'
       )
 
-      // Reload errors
-      await loadErrors()
+      await refreshErrors()
       
       // In mobile carousel, don't close - just stay on same index
       if (!isMobile) {
@@ -160,13 +208,18 @@ export default function ErrorsPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
+
+  const selectedErrorLastReview = selectedError?.last_reviewed_at
+    ? new Date(selectedError.last_reviewed_at)
+    : null
+  const selectedErrorHasImage = Boolean(selectedError?.image_url)
 
   return (
     <div className="space-y-6 md:space-y-10 md:pt-4">
@@ -254,7 +307,7 @@ export default function ErrorsPage() {
               <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
                 Total
               </div>
-              <div className="text-2xl font-bold text-foreground">{errors.length}</div>
+              <div className="text-2xl font-bold text-foreground">{errorsList.length}</div>
             </div>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
@@ -285,8 +338,7 @@ export default function ErrorsPage() {
             À réviser aujourd&apos;hui ({filteredErrorsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {filteredErrorsDue.map((error: any) => (
+            {filteredErrorsDue.map((error) => (
               <div
                 key={error.id}
                 className="relative h-48 w-full overflow-hidden rounded-lg border p-4 text-left transition-all hover:shadow-lg"
@@ -297,31 +349,27 @@ export default function ErrorsPage() {
                   style={{ backgroundImage: error.image_url ? `url(${error.image_url})` : 'url(/gradient.jpeg)' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                
+
                 {/* Button to open modal */}
                 <button
                   onClick={() => openErrorModal(error)}
                   className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
-                  aria-label="Voir l'erreur"
+                  aria-label="Voir l&rsquo;erreur"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                   </svg>
                 </button>
-                
-                  {/* Content */}
-                  <div className="relative flex h-full flex-col justify-between pointer-events-none">
-                    <div className="flex items-start gap-2">
-                      {/* <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
-                        <Clock className="mr-1 h-3 w-3" />
-                        Réviser
-                      </span> */}
-                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
-                        {SUBTEST_LABELS[error.subtest] || error.subtest}
-                      </span>
-                    </div>
-                  
+
+                {/* Content */}
+                <div className="relative flex h-full flex-col justify-between pointer-events-none">
+                  <div className="flex items-start gap-2">
+                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
+                      {SUBTEST_LABELS[error.subtest] || error.subtest}
+                    </span>
+                  </div>
+
                   <div className="space-y-2">
                     {error.explanation && (
                       <p className="text-base font-medium text-white line-clamp-2">
@@ -333,7 +381,7 @@ export default function ErrorsPage() {
                       <span>{error.review_count} révisions</span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
-                      <div 
+                      <div
                         className="h-full bg-white transition-all"
                         style={{ width: `${(error.mastery_level / 5) * 100}%` }}
                       />
@@ -353,8 +401,7 @@ export default function ErrorsPage() {
             Prochaines révisions ({filteredErrorsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {filteredErrorsUpcoming.map((error: any) => (
+            {filteredErrorsUpcoming.map((error) => (
               <div
                 key={error.id}
                 className="relative h-48 w-full overflow-hidden rounded-lg border transition-all hover:shadow-md"
@@ -370,7 +417,7 @@ export default function ErrorsPage() {
                 <button
                   onClick={() => openErrorModal(error)}
                   className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 hover:bg-primary/90 active:scale-95"
-                  aria-label="Voir l'erreur"
+                  aria-label="Voir l&rsquo;erreur"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 dark:text-white dark:drop-shadow-md">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -400,7 +447,14 @@ export default function ErrorsPage() {
                     )}
                     <div className="flex items-center justify-between text-xs text-white/90">
                       <span>Niveau {error.mastery_level}/5</span>
-                      <span>{new Date(error.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                      <span>
+                        {error.next_review_at
+                          ? new Date(error.next_review_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                            })
+                          : 'À planifier'}
+                      </span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
                       <div 
@@ -416,7 +470,7 @@ export default function ErrorsPage() {
         </div>
       ) : null}
 
-      {errors.length > 0 &&
+      {errorsList.length > 0 &&
         filteredErrorsDue.length === 0 &&
         filteredErrorsUpcoming.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
@@ -425,7 +479,7 @@ export default function ErrorsPage() {
         )}
 
       {/* Empty State */}
-      {errors.length === 0 && !loading && (
+      {errorsList.length === 0 && (
         <Card className="mt-8">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Clock className="h-12 w-12 text-muted-foreground mb-4" />
@@ -445,63 +499,98 @@ export default function ErrorsPage() {
           if (!open) setSelectedError(null)
         }}>
           {selectedError && (
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-sm text-muted-foreground">
-                  {SUBTEST_LABELS[selectedError.subtest] || selectedError.subtest}
-                </DialogTitle>
+            <DialogContent className="max-w-4xl" showCloseButton={false}>
+              <DialogHeader className="sr-only">
+                <DialogTitle>Détail de l&rsquo;erreur</DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4">
-                {selectedError.image_url && (
-                  <div className="relative w-full h-96 rounded-lg overflow-hidden bg-muted border">
-                    <Image
-                      src={selectedError.image_url}
-                      alt="Error"
-                      fill
-                      className="object-contain"
-                      priority
-                    />
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      {SUBTEST_LABELS[selectedError.subtest] || selectedError.subtest}
+                    </span>
+                    {isDueForReview(selectedError.next_review_at) && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
+                        <Clock className="h-3.5 w-3.5" />
+                        À réviser
+                      </span>
+                    )}
+                    {selectedErrorLastReview && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                        Dernière révision{' '}
+                        {selectedErrorLastReview.toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    )}
                   </div>
-                )}
 
-                <h2 className="text-xl font-bold">
-                  {selectedError.title || selectedError.explanation?.slice(0, 60) || 'Erreur'}
-                </h2>
-
-                {selectedError.explanation && (
-                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {selectedError.explanation}
-                  </p>
-                )}
-
-                <div className="flex gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Niveau:</span>{' '}
-                    <span className="font-medium">{selectedError.mastery_level}/5</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Révisions:</span>{' '}
-                    <span className="font-medium">{selectedError.review_count}</span>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem
+                        onClick={() => openEditError(selectedError)}
+                        className="cursor-pointer"
+                      >
+                        <PenLine className="mr-2 h-4 w-4" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => openDeleteError(selectedError)}
+                        className="cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col gap-5">
+                  <h2 className="text-3xl font-bold text-foreground leading-tight">
+                    {selectedError.explanation?.slice(0, 120) || 'Erreur'}
+                  </h2>
+
+                  {selectedErrorHasImage && (
+                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border bg-muted/40">
+                      <Image
+                        src={selectedError.image_url as string}
+                        alt={selectedError.explanation || 'Erreur'}
+                        fill
+                        className="object-cover"
+                        priority
+                        sizes="(min-width: 1024px) 620px, 90vw"
+                      />
+                    </div>
+                  )}
+
+                  {/* Stats card intentionally removed for cleaner layout */}
+                </div>
+
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:gap-4">
                   <Button
                     variant="destructive"
                     onClick={() => handleReview(false)}
                     disabled={updating}
-                    className="flex-1"
+                    className="w-full h-12 text-base font-semibold sm:flex-1"
                   >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
+                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Oublié'}
                   </Button>
                   <Button
                     variant="success"
                     onClick={() => handleReview(true)}
                     disabled={updating}
-                    className="flex-1"
+                    className="w-full h-12 text-base font-semibold sm:flex-1"
                   >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
+                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Je sais'}
                   </Button>
                 </div>
               </div>
@@ -518,18 +607,17 @@ export default function ErrorsPage() {
             setSelectedError(null)
             setFullscreenImage(null)
           }}
-          items={[...filteredErrorsDue, ...filteredErrorsUpcoming]}
+          items={combinedFilteredErrors}
           currentIndex={currentIndex}
           onIndexChange={(index) => {
             setCurrentIndex(index)
-            const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
-            setSelectedError(allErrors[index])
+            const nextError = combinedFilteredErrors[index] ?? null
+            setSelectedError(nextError)
             setFullscreenImage(null)
           }}
         >
           {(item) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const error = item as any
+            const error = item as SupabaseError
             return (
               <div className={`space-y-6 ${hasBottomNav ? 'pb-40' : 'pb-24'}`}>
                 {/* Badge subtest */}
@@ -551,24 +639,13 @@ export default function ErrorsPage() {
                   )}
                 </div>
 
-                {/* Main content - different layout if image exists */}
+                {/* Main content */}
                 {!error.image_url ? (
-                  // No image: text-only layout similar to notions
-                  <>
-                    {/* Title from correct answer when provided */}
-                    {error.correct_answer && (
-                      <h2 className="text-3xl font-bold text-foreground leading-tight">
-                        {error.correct_answer}
-                      </h2>
-                    )}
-                    
-                    {/* Additional explanation if correct_answer exists */}
-                    {error.explanation && (
-                      <p className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
-                        {error.explanation}
-                      </p>
-                    )}
-                  </>
+                  error.explanation && (
+                    <p className="text-3xl font-bold text-foreground leading-tight whitespace-pre-wrap">
+                      {error.explanation}
+                    </p>
+                  )
                 ) : (
                   // With image: traditional layout
                   <>
@@ -577,14 +654,14 @@ export default function ErrorsPage() {
                       type="button"
                       onClick={() =>
                         setFullscreenImage({
-                          src: error.image_url,
+                          src: error.image_url!,
                           alt: error.explanation || 'Erreur',
                         })
                       }
                       className="relative h-[40vh] w-full overflow-hidden rounded-xl bg-muted cursor-zoom-in active:cursor-zoom-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <Image
-                        src={error.image_url}
+                        src={error.image_url!}
                         alt={error.explanation || 'Erreur'}
                         fill
                         className="object-cover transition-transform duration-200 hover:scale-105"
@@ -628,10 +705,12 @@ export default function ErrorsPage() {
                         Prochaine
                       </div>
                       <div className="text-2xl font-bold text-primary">
-                        {new Date(error.next_review_at).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
+                        {error.next_review_at
+                          ? new Date(error.next_review_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                            })
+                          : 'À planifier'}
                       </div>
                     </div>
                   </div>
@@ -661,6 +740,63 @@ export default function ErrorsPage() {
           </FloatingButton>
         </FloatingButtonsContainer>
       )}
+
+      <MobileFormSheet
+        open={isEditFormOpen}
+        onOpenChange={(open) => {
+          setIsEditFormOpen(open)
+          if (!open) {
+            setErrorToEdit(null)
+          }
+        }}
+        title="Modifier l&rsquo;erreur"
+      >
+        {errorToEdit && (
+          <EditErrorForm
+            error={errorToEdit}
+            onSuccess={() => {
+              setIsEditFormOpen(false)
+              setErrorToEdit(null)
+            }}
+          />
+        )}
+      </MobileFormSheet>
+
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={(open) => {
+          setIsDeleteConfirmOpen(open)
+          if (!open) {
+            setErrorToDelete(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Supprimer l&rsquo;erreur ?</DialogTitle>
+            <DialogDescription>
+              Cette action est irréversible. L&rsquo;erreur et son historique de révision seront supprimés.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteError}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {fullscreenImage && (
         <FullscreenImageViewer

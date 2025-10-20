@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Target, TrendingUp, AlertCircle, Brain, Calendar, Loader2, LogOut, Moon, Sun, Monitor } from 'lucide-react'
+import { Calendar, Loader2, LogOut, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
 import { Notion, Error as ErrorType } from '@/lib/types/database.types'
@@ -222,18 +222,6 @@ export default function ProfilePage() {
           </Button>
         </div>
       )}
-    </div>
-  )
-}
-
-function Stat({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between rounded-md border bg-muted px-3 py-2 text-sm">
-      <div className="flex flex-col leading-tight">
-        <span className="text-muted-foreground text-xs">{label}</span>
-        <span className="font-semibold text-foreground text-base">{value}</span>
-      </div>
-      <div className="shrink-0">{icon}</div>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
-
+ 
 export const metadata: Metadata = {
   title: "Tage Mage Tracker",
   description: "Suivez votre préparation au Tage Mage efficacement",

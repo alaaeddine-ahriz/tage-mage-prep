@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -11,154 +11,170 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { FloatingButton, FloatingButtonsContainer } from '@/components/ui/floating-buttons'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage, validateImageFile } from '@/lib/utils/image-compression'
-import { calculateNextReviewDate } from '@/lib/utils/spaced-repetition'
-import { toast } from 'sonner'
-import { Loader2, Image as ImageIcon, X } from 'lucide-react'
-import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-
 import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
 import { useDashboardData } from '@/lib/state/dashboard-data'
+import type { Error as SupabaseError } from '@/lib/types/database.types'
+import { toast } from 'sonner'
+import { Image as ImageIcon, Loader2, X } from 'lucide-react'
 
-interface AddNotionFormProps {
+interface EditErrorFormProps {
+  error: SupabaseError
   onSuccess?: () => void
 }
 
-export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
+export function EditErrorForm({ error, onSuccess }: EditErrorFormProps) {
   const isMobile = useIsMobile()
-  const { refreshNotions } = useDashboardData()
+  const { refreshErrors } = useDashboardData()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [loading, setLoading] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    subtest: '',
-    title: '',
-    description: '',
-  })
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    subtest: error.subtest,
+    description: error.explanation ?? '',
+  })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(error.image_url)
+  const [imageRemoved, setImageRemoved] = useState(false)
+
+  useEffect(() => {
+    setFormData({
+      subtest: error.subtest,
+      description: error.explanation ?? '',
+    })
+    setImagePreview(error.image_url)
+    setImageFile(null)
+    setImageRemoved(false)
+  }, [error])
+
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
     if (!file) return
 
     try {
       validateImageFile(file)
       const compressed = await compressImage(file)
       setImageFile(compressed)
+      setImageRemoved(false)
 
-      // Create preview
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
       }
       reader.readAsDataURL(compressed)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erreur lors du traitement de l\'image'
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Erreur lors du traitement de l’image'
       toast.error(message)
     }
   }
 
-  const removeImage = () => {
-    setImageFile(null)
+  const handleRemoveImage = () => {
     setImagePreview(null)
+    setImageFile(null)
+    setImageRemoved(true)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    const descriptionValue = formData.description.trim()
+    const hasDescription = descriptionValue.length > 0
+    const hadExistingImage = Boolean(error.image_url) && !imageRemoved
+    const hasNewImage = Boolean(imageFile)
+
+    if (!hasDescription && !hadExistingImage && !hasNewImage) {
+      toast.error('Ajoutez une photo ou une description')
+      return
+    }
+
+    if (!formData.subtest) {
+      toast.error('Sélectionnez un sous-test')
+      return
+    }
+
     setLoading(true)
 
     try {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
       if (!user) {
         toast.error('Vous devez être connecté')
         return
       }
 
-      let imageUrl = null
+      let imageUrl = error.image_url
 
-      // Upload image if present
+      if (imageRemoved) {
+        imageUrl = null
+      }
+
       if (imageFile) {
         const fileName = `${user.id}/${Date.now()}-${imageFile.name}`
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('error-images')
-          .upload(fileName, imageFile)
+          .upload(fileName, imageFile, { upsert: true })
 
         if (uploadError) {
           console.error('Upload error:', uploadError)
-          toast.error('Erreur lors de l\'upload de l\'image')
+          toast.error('Erreur lors de l’upload de l’image')
           return
         }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('error-images')
-          .getPublicUrl(uploadData.path)
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('error-images').getPublicUrl(uploadData.path)
 
         imageUrl = publicUrl
       }
 
-      const nextReview = calculateNextReviewDate(0)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('notions').insert({
-        user_id: user.id,
+      const updateData: Partial<SupabaseError> = {
         subtest: formData.subtest,
-        title: formData.title,
-        description: formData.description || null,
+        explanation: descriptionValue || null,
         image_url: imageUrl,
-        mastery_level: 0,
-        next_review_at: nextReview.toISOString(),
-        review_count: 0,
-      })
+      }
 
-      if (error) throw error
+      const { error: updateError } = await supabase
+        .from('errors')
+        .update(updateData)
+        .eq('id', error.id)
 
-      toast.success('Notion créée avec succès!')
-      
-      // Reset form
-      setFormData({
-        subtest: formData.subtest, // Keep last subtest selected
-        title: '',
-        description: '',
-      })
-      removeImage()
+      if (updateError) throw updateError
 
-      await refreshNotions()
+      toast.success('Erreur mise à jour')
+      await refreshErrors()
       onSuccess?.()
-    } catch (error) {
-      console.error('Error adding notion:', error)
-      toast.error('Erreur lors de la création')
+    } catch (err) {
+      console.error('Error updating error:', err)
+      toast.error('Erreur lors de la mise à jour')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <>
+  const formContent = (
     <form onSubmit={handleSubmit} className={`space-y-4 ${isMobile ? 'pb-32' : ''}`}>
-      {/* Image Upload */}
       <div className="space-y-2">
         <Label>Photo (optionnel)</Label>
         {imagePreview ? (
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="w-full rounded-lg border"
-            />
+            <img src={imagePreview} alt="Preview" className="w-full rounded-lg border" />
             <Button
               type="button"
               variant="destructive"
               size="icon"
               className="absolute right-2 top-2"
-              onClick={removeImage}
+              onClick={handleRemoveImage}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -186,14 +202,14 @@ export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="subtest">Sous-test</Label>
+        <Label htmlFor="subtest">Sous-test *</Label>
         <Select
           value={formData.subtest}
-          onValueChange={(value) => setFormData({ ...formData, subtest: value })}
+          onValueChange={(value) => setFormData((prev) => ({ ...prev, subtest: value }))}
           required
         >
           <SelectTrigger id="subtest" className="w-full">
-            <SelectValue placeholder="Sélectionner un sous-test" />
+            <SelectValue placeholder="Sélectionner..." />
           </SelectTrigger>
           <SelectContent>
             {SUBTESTS.map((subtest) => (
@@ -206,44 +222,42 @@ export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="title">Titre</Label>
-        <Input
-          id="title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="Ex: Table de multiplication de 13"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="description">Description (optionnel)</Label>
         <Input
           id="description"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Détails de la notion..."
+          onChange={(event) =>
+            setFormData((prev) => ({ ...prev, description: event.target.value }))
+          }
+          placeholder="Notes supplémentaires..."
         />
+        <p className="text-xs text-muted-foreground">Photo ou description requise</p>
       </div>
 
       {!isMobile && (
         <div className="flex justify-end gap-3 pt-2">
           <Button type="submit" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Créer
+            Enregistrer
           </Button>
         </div>
       )}
     </form>
-    
-    {isMobile && (
+  )
+
+  if (!isMobile) {
+    return formContent
+  }
+
+  return (
+    <>
+      {formContent}
       <FloatingButtonsContainer>
         <FloatingButton type="button" onClick={handleSubmit} disabled={loading}>
           {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-          Créer
+          Enregistrer
         </FloatingButton>
       </FloatingButtonsContainer>
-    )}
     </>
   )
 }

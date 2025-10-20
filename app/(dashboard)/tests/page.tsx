@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,8 +18,9 @@ import { TestAttemptsModal } from '@/components/dashboard/TestAttemptsModal'
 import { FullTestAttemptsModal } from '@/components/dashboard/FullTestAttemptsModal'
 import { Plus, Loader2 } from 'lucide-react'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-import { Test, TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
+import { TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
+import { useDashboardData } from '@/lib/state/dashboard-data'
 
 const TEST_TYPES = [
   { value: 'all', label: 'Tous' },
@@ -29,9 +29,7 @@ const TEST_TYPES = [
 ]
 
 export default function TestsPage() {
-  const [tests, setTests] = useState<TestWithAttempts[]>([])
-  const [fullTests, setFullTests] = useState<FullTestWithAttempts[]>([])
-  const [loading, setLoading] = useState(true)
+  const { tests, fullTests, refreshTests, refreshFullTests } = useDashboardData()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFullTestFormOpen, setIsFullTestFormOpen] = useState(false)
   const [selectedTest, setSelectedTest] = useState<TestWithAttempts | null>(null)
@@ -40,133 +38,54 @@ export default function TestsPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [activeTab, setActiveTab] = useState<'individual' | 'full'>('individual')
   const isMobile = useIsMobile()
+  const isLoading = !tests || !fullTests
+  const testsList = useMemo(() => tests ?? [], [tests])
+  const fullTestsList = useMemo(() => fullTests ?? [], [fullTests])
+  const filteredTests = useMemo(() => {
+    return testsList.filter((test) => {
+      const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
+      const matchesType = typeFilter === 'all' || test.type === typeFilter
+      return matchesSubtest && matchesType
+    })
+  }, [testsList, subtestFilter, typeFilter])
 
   useEffect(() => {
-    loadTests()
-    loadFullTests()
-  }, [])
-
-  const loadTests = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      const { data: testsData } = await supabase
-        .from('tests')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('date', { ascending: false })
-
-      if (testsData) {
-        // Load attempts for each test
-        const testsWithAttempts = await Promise.all(
-          testsData.map(async (test: Test) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: attempts } = await (supabase as any)
-              .from('test_attempts')
-              .select('*')
-              .eq('test_id', test.id)
-              .order('date', { ascending: false })
-
-            return {
-              ...test,
-              attempts: attempts || [],
-            }
-          })
-        )
-        setTests(testsWithAttempts as TestWithAttempts[])
-      }
-    } catch (error) {
-      console.error('Error loading tests:', error)
-    } finally {
-      setLoading(false)
+    if (!selectedTest) return
+    const updated = testsList.find((test) => test.id === selectedTest.id)
+    if (updated && updated !== selectedTest) {
+      setSelectedTest(updated)
     }
-  }
+  }, [testsList, selectedTest])
 
-  const loadFullTests = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: fullTestsData } = await (supabase as any)
-        .from('full_tests')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('date', { ascending: false })
-
-      if (fullTestsData) {
-        // Load subtests and attempts for each full test
-        const fullTestsWithData = await Promise.all(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          fullTestsData.map(async (fullTest: any) => {
-            // Load subtests
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: subtests } = await (supabase as any)
-              .from('full_test_subtests')
-              .select('*')
-              .eq('full_test_id', fullTest.id)
-              .order('created_at', { ascending: true })
-
-            // Load attempts
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: attemptsData } = await (supabase as any)
-              .from('full_test_attempts')
-              .select('*')
-              .eq('full_test_id', fullTest.id)
-              .order('date', { ascending: false })
-
-            // Load subtests for each attempt
-            const attempts = attemptsData ? await Promise.all(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              attemptsData.map(async (attempt: any) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: attemptSubtests } = await (supabase as any)
-                  .from('full_test_attempt_subtests')
-                  .select('*')
-                  .eq('attempt_id', attempt.id)
-
-                return {
-                  ...attempt,
-                  subtests: attemptSubtests || [],
-                }
-              })
-            ) : []
-
-            return {
-              ...fullTest,
-              subtests: subtests || [],
-              attempts,
-            }
-          })
-        )
-        setFullTests(fullTestsWithData as FullTestWithAttempts[])
-      }
-    } catch (error) {
-      console.error('Error loading full tests:', error)
+  useEffect(() => {
+    if (!selectedFullTest) return
+    const updated = fullTestsList.find((test) => test.id === selectedFullTest.id)
+    if (updated && updated !== selectedFullTest) {
+      setSelectedFullTest(updated)
     }
+  }, [fullTestsList, selectedFullTest])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   const handleFormSuccess = () => {
-    loadTests()
+    void refreshTests()
     setIsFormOpen(false)
   }
 
   const handleFullTestFormSuccess = () => {
-    loadFullTests()
+    void refreshFullTests()
     setIsFullTestFormOpen(false)
   }
 
   const handleTestClick = (test: TestWithAttempts) => {
     setSelectedTest(test)
   }
-
-  // Filter tests
-  const filteredTests = tests.filter((test) => {
-    const matchesSubtest = subtestFilter === 'all' || test.subtest === subtestFilter
-    const matchesType = typeFilter === 'all' || test.type === typeFilter
-    return matchesSubtest && matchesType
-  })
 
   const emptyIndividualState = (
     <Card>
@@ -206,6 +125,11 @@ export default function TestsPage() {
                 <span className="text-sm font-medium text-foreground">
                   {test.name || SUBTEST_LABELS[test.subtest] || test.subtest}
                 </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {SUBTEST_LABELS[test.subtest] || test.subtest}
+                </span>
                 <span className="text-xs text-muted-foreground">•</span>
                 <span
                   className={`text-xs font-medium ${
@@ -240,7 +164,7 @@ export default function TestsPage() {
         ))}
       </div>
     ) : (
-      tests.length > 0 && (
+      testsList.length > 0 && (
         <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
           Aucun test ne correspond aux filtres sélectionnés.
         </div>
@@ -248,7 +172,7 @@ export default function TestsPage() {
     )
 
   const individualMobileContent =
-    tests.length > 0 ? (
+    testsList.length > 0 ? (
       <div className="space-y-2">
         <h2 className="text-base font-semibold text-foreground">
           Historique ({filteredTests.length})
@@ -259,12 +183,12 @@ export default function TestsPage() {
       emptyIndividualState
     )
 
-  const individualDesktopContent = tests.length > 0 ? individualListContent : emptyIndividualState
+  const individualDesktopContent = testsList.length > 0 ? individualListContent : emptyIndividualState
 
   const fullListContent =
-    fullTests.length > 0 ? (
+    fullTestsList.length > 0 ? (
       <div className="divide-y divide-border">
-        {fullTests.map((fullTest) => (
+        {fullTestsList.map((fullTest) => (
           <div
             key={fullTest.id}
             className="flex w-full items-center justify-between py-3 cursor-pointer hover:bg-muted/50 px-0 transition-colors"
@@ -275,14 +199,14 @@ export default function TestsPage() {
                 <span className="text-sm font-medium text-foreground">
                   {fullTest.name}
                 </span>
-                <span className="text-xs text-muted-foreground">•</span>
+                {/* <span className="text-xs text-muted-foreground">•</span>
                 <span
                   className={`text-xs font-medium ${
                     fullTest.type === 'Blanc' ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >
                   {fullTest.type}
-                </span>
+                </span> */}
                 {fullTest.attempts && fullTest.attempts.length > 0 && (
                   <>
                     <span className="text-xs text-muted-foreground">•</span>
@@ -322,7 +246,7 @@ export default function TestsPage() {
         ))}
       </div>
     ) : (
-      fullTests.length === 0 ? emptyFullState : (
+      fullTestsList.length === 0 ? emptyFullState : (
         <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
           Aucun test ne correspond aux filtres sélectionnés.
         </div>
@@ -330,10 +254,10 @@ export default function TestsPage() {
     )
 
   const fullMobileContent =
-    fullTests.length > 0 ? (
+    fullTestsList.length > 0 ? (
       <div className="space-y-2">
         <h2 className="text-base font-semibold text-foreground">
-          Historique ({fullTests.length})
+          Historique ({fullTestsList.length})
         </h2>
         {fullListContent}
       </div>
@@ -342,14 +266,6 @@ export default function TestsPage() {
     )
 
   const fullDesktopContent = fullListContent
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6 md:space-y-10 md:pt-4">
@@ -394,21 +310,21 @@ export default function TestsPage() {
         </div>
 
         {/* Tabs selector - Mobile uniquement, juste sous le titre */}
-        {isMobile && (tests.length > 0 || fullTests.length > 0) && (
+        {isMobile && (testsList.length > 0 || fullTestsList.length > 0) && (
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'individual' | 'full')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="individual">
-                Individuels ({tests.length})
+                Individuels ({testsList.length})
               </TabsTrigger>
               <TabsTrigger value="full">
-                Complets ({fullTests.length})
+                Complets ({fullTestsList.length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
         )}
 
         {/* Filters - Mobile sous les tabs */}
-        {isMobile && (tests.length > 0 || fullTests.length > 0) && (
+        {isMobile && (testsList.length > 0 || fullTestsList.length > 0) && (
           <div className="flex gap-2">
             {activeTab === 'individual' && (
               <>
@@ -472,7 +388,7 @@ export default function TestsPage() {
         )}
 
         {/* Filters - Desktop */}
-        {!isMobile && tests.length > 0 && (
+        {!isMobile && testsList.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <div className="flex flex-wrap gap-2">
               {SUBTESTS.map((subtest) => (
@@ -534,7 +450,7 @@ export default function TestsPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">
-                Tests complets ({fullTests.length})
+                Tests complets ({fullTestsList.length})
               </h2>
             </div>
             {fullDesktopContent}
@@ -549,7 +465,7 @@ export default function TestsPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedTest(null)
         }}
-        onSuccess={loadTests}
+        onSuccess={() => void refreshTests()}
       />
 
       <FullTestAttemptsModal
@@ -558,7 +474,7 @@ export default function TestsPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedFullTest(null)
         }}
-        onSuccess={loadFullTests}
+        onSuccess={() => void refreshFullTests()}
       />
     </div>
   )

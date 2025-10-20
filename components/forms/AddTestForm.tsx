@@ -13,20 +13,20 @@ import {
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 import { SUBTEST_OPTIONS as SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
+import { useDashboardData } from '@/lib/state/dashboard-data'
 
 interface AddTestFormProps {
   onSuccess?: () => void
 }
 
 export function AddTestForm({ onSuccess }: AddTestFormProps) {
-  const router = useRouter()
   const isMobile = useIsMobile()
+  const { refreshTests } = useDashboardData()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -73,13 +73,15 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         finalName = `${baseName} #${(count ?? 0) + 1}`
       }
 
+      const normalizedType = formData.type.trim() === 'Blanc' ? 'Blanc' : 'TD'
+
       const { error } = await supabase.from('tests').insert({
         user_id: user.id,
         date: new Date(formData.date).toISOString(),
-        type: formData.type,
+        type: normalizedType,
         subtest: formData.subtest,
         name: finalName,
-        score: parseInt(formData.score),
+        score: parseInt(formData.score) * 4,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
         notes: formData.notes || null,
       })
@@ -99,7 +101,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         notes: '',
       })
 
-      router.refresh()
+      await refreshTests()
       onSuccess?.()
     } catch (error) {
       console.error('Error adding test:', error)

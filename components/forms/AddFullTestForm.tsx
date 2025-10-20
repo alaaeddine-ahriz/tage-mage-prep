@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useDashboardData } from '@/lib/state/dashboard-data'
 
 const FULL_TEST_SUBTESTS = [
   { key: 'comprehension', label: 'CDT' },
@@ -35,8 +35,8 @@ interface AddFullTestFormProps {
 }
 
 export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProps) {
-  const router = useRouter()
   const isMobile = useIsMobile()
+  const { refreshFullTests } = useDashboardData()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: existingTest?.name || '',
@@ -157,7 +157,7 @@ export function AddFullTestForm({ onSuccess, existingTest }: AddFullTestFormProp
         }))
       )
 
-      router.refresh()
+      await refreshFullTests()
       onSuccess?.()
     } catch (error) {
       console.error('Error adding full test:', error)
