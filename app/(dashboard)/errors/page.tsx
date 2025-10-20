@@ -447,7 +447,14 @@ export default function ErrorsPage() {
                     )}
                     <div className="flex items-center justify-between text-xs text-white/90">
                       <span>Niveau {error.mastery_level}/5</span>
-                      <span>{new Date(error.next_review_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                      <span>
+                        {error.next_review_at
+                          ? new Date(error.next_review_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                            })
+                          : 'À planifier'}
+                      </span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
                       <div 
@@ -698,10 +705,12 @@ export default function ErrorsPage() {
                         Prochaine
                       </div>
                       <div className="text-2xl font-bold text-primary">
-                        {new Date(error.next_review_at).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
+                        {error.next_review_at
+                          ? new Date(error.next_review_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                            })
+                          : 'À planifier'}
                       </div>
                     </div>
                   </div>
