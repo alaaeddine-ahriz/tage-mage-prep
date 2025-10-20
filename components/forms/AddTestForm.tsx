@@ -79,7 +79,7 @@ export function AddTestForm({ onSuccess }: AddTestFormProps) {
         type: formData.type,
         subtest: formData.subtest,
         name: finalName,
-        score: parseInt(formData.score),
+        score: parseInt(formData.score) * 4,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
         notes: formData.notes || null,
       })

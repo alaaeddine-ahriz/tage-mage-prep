@@ -74,7 +74,7 @@ async function fetchTests(
 
   const testsWithAttempts = await Promise.all(
     testsData.map(async (test: Test) => {
-      const { data: attemptsData, error: attemptsError } = await (supabase as any)
+      const { data: attemptsData, error: attemptsError } = await supabase
         .from('test_attempts')
         .select('*')
         .eq('test_id', test.id)
@@ -96,7 +96,7 @@ async function fetchFullTests(
   supabase: ReturnType<typeof createClient>,
   userId: string
 ): Promise<FullTestWithAttempts[]> {
-  const { data: fullTestsData, error: fullTestsError } = await (supabase as any)
+  const { data: fullTestsData, error: fullTestsError } = await supabase
     .from('full_tests')
     .select('*')
     .eq('user_id', userId)
@@ -109,7 +109,7 @@ async function fetchFullTests(
 
   const fullTestsWithData = await Promise.all(
     (fullTestsData as FullTest[]).map(async (fullTest) => {
-      const { data: subtestsData, error: subtestsError } = await (supabase as any)
+      const { data: subtestsData, error: subtestsError } = await supabase
         .from('full_test_subtests')
         .select('*')
         .eq('full_test_id', fullTest.id)
@@ -117,7 +117,7 @@ async function fetchFullTests(
 
       if (subtestsError) throw subtestsError
 
-      const { data: attemptsData, error: attemptsError } = await (supabase as any)
+      const { data: attemptsData, error: attemptsError } = await supabase
         .from('full_test_attempts')
         .select('*')
         .eq('full_test_id', fullTest.id)
@@ -128,7 +128,7 @@ async function fetchFullTests(
       const attempts = attemptsData
         ? await Promise.all(
             (attemptsData as FullTestAttempt[]).map(async (attempt) => {
-              const { data: attemptSubtestsData, error: attemptSubtestsError } = await (supabase as any)
+              const { data: attemptSubtestsData, error: attemptSubtestsError } = await supabase
                 .from('full_test_attempt_subtests')
                 .select('*')
                 .eq('attempt_id', attempt.id)
