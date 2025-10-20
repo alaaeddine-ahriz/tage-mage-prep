@@ -23,7 +23,8 @@ import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { AddNotionForm } from '@/components/forms/AddNotionForm'
 import { EditNotionForm } from '@/components/forms/EditNotionForm'
-import { Plus, Clock, TrendingUp, Loader2, PenLine, Trash2 } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Plus, Clock, TrendingUp, Loader2, MoreHorizontal, PenLine, Trash2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
@@ -195,6 +196,14 @@ export default function NotionsPage() {
 
   const combinedFiltersEmpty =
     notionsList.length > 0 && notionsDue.length === 0 && notionsUpcoming.length === 0
+
+  const selectedNotionNextReview = selectedNotion?.next_review_at
+    ? new Date(selectedNotion.next_review_at)
+    : null
+  const selectedNotionLastReview = selectedNotion?.last_reviewed_at
+    ? new Date(selectedNotion.last_reviewed_at)
+    : null
+  const selectedNotionHasImage = Boolean(selectedNotion?.image_url)
 
   if (isLoading) {
     return (
@@ -471,78 +480,103 @@ export default function NotionsPage() {
           if (!open) setSelectedNotion(null)
         }}>
           {selectedNotion && (
-            <DialogContent className="max-w-lg">
-              <DialogHeader className="gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <DialogTitle className="text-sm text-muted-foreground">
-                  {SUBTEST_LABELS[selectedNotion.subtest] || selectedNotion.subtest}
-                </DialogTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditNotion(selectedNotion)}
-                  >
-                    <PenLine className="mr-2 h-4 w-4" />
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => openDeleteNotion(selectedNotion)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Supprimer
-                  </Button>
-                </div>
+            <DialogContent className="max-w-3xl" showCloseButton={false}>
+              <DialogHeader className="sr-only">
+                <DialogTitle>{selectedNotion.title}</DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4">
-                {selectedNotion.image_url && (
-                  <div className="relative w-full h-64 overflow-hidden rounded-lg border bg-muted">
-                    <Image
-                      src={selectedNotion.image_url}
-                      alt={selectedNotion.title || 'Notion'}
-                      fill
-                      className="object-contain"
-                    />
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      {SUBTEST_LABELS[selectedNotion.subtest] || selectedNotion.subtest}
+                    </span>
+                    {isDueForReview(selectedNotion.next_review_at) && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
+                        <Clock className="h-3.5 w-3.5" />
+                        À réviser
+                      </span>
+                    )}
+                    {selectedNotionLastReview && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                        Dernière révision{' '}
+                        {selectedNotionLastReview.toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    )}
                   </div>
-                )}
 
-                <h2 className="text-xl font-bold">{selectedNotion.title}</h2>
-
-                {selectedNotion.description && (
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {selectedNotion.description}
-                  </p>
-                )}
-
-                <div className="flex gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Niveau:</span>{' '}
-                    <span className="font-medium">{selectedNotion.mastery_level}/5</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Révisions:</span>{' '}
-                    <span className="font-medium">{selectedNotion.review_count}</span>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem
+                        onClick={() => openEditNotion(selectedNotion)}
+                        className="cursor-pointer"
+                      >
+                        <PenLine className="mr-2 h-4 w-4" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => openDeleteNotion(selectedNotion)}
+                        className="cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col gap-5">
+                  <h2 className="text-3xl font-bold text-foreground leading-tight text-center sm:text-left">
+                    {selectedNotion.title}
+                  </h2>
+
+                  {selectedNotion.description && (
+                    <p className="text-base leading-relaxed text-muted-foreground whitespace-pre-wrap text-left">
+                      {selectedNotion.description}
+                    </p>
+                  )}
+
+                  {selectedNotionHasImage && (
+                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl border bg-muted/40">
+                      <Image
+                        src={selectedNotion.image_url as string}
+                        alt={selectedNotion.title || 'Notion'}
+                        fill
+                        className="object-cover"
+                        sizes="(min-width: 768px) 620px, 90vw"
+                      />
+                    </div>
+                  )}
+
+                  {/* Stats card intentionally removed for cleaner layout */}
+                </div>
+
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:gap-4">
                   <Button
                     variant="destructive"
                     onClick={() => handleReview(false)}
                     disabled={updating}
-                    className="flex-1"
+                    className="w-full h-12 text-base font-semibold sm:flex-1"
                   >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Oublié'}
+                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Oublié'}
                   </Button>
                   <Button
                     variant="success"
                     onClick={() => handleReview(true)}
                     disabled={updating}
-                    className="flex-1"
+                    className="w-full h-12 text-base font-semibold sm:flex-1"
                   >
-                    {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Je sais'}
+                    {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Je sais'}
                   </Button>
                 </div>
               </div>
