@@ -14,20 +14,20 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { compressImage, validateImageFile } from '@/lib/utils/image-compression'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 import { Image as ImageIcon, Loader2, X } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
+import { useDashboardData } from '@/lib/state/dashboard-data'
 
 interface AddErrorFormProps {
   onSuccess?: () => void
 }
 
 export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
-  const router = useRouter()
   const isMobile = useIsMobile()
+  const { refreshErrors } = useDashboardData()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -134,7 +134,7 @@ export function AddErrorForm({ onSuccess }: AddErrorFormProps) {
       })
       removeImage()
 
-      router.refresh()
+      await refreshErrors()
       onSuccess?.()
     } catch (error) {
       console.error('Error adding error:', error)

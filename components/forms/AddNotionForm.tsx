@@ -15,20 +15,20 @@ import { createClient } from '@/lib/supabase/client'
 import { compressImage, validateImageFile } from '@/lib/utils/image-compression'
 import { calculateNextReviewDate } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 import { Loader2, Image as ImageIcon, X } from 'lucide-react'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 import { SUBTEST_OPTIONS as SUBTESTS } from '@/lib/constants/subtests'
+import { useDashboardData } from '@/lib/state/dashboard-data'
 
 interface AddNotionFormProps {
   onSuccess?: () => void
 }
 
 export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
-  const router = useRouter()
   const isMobile = useIsMobile()
+  const { refreshNotions } = useDashboardData()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -129,7 +129,7 @@ export function AddNotionForm({ onSuccess }: AddNotionFormProps) {
       })
       removeImage()
 
-      router.refresh()
+      await refreshNotions()
       onSuccess?.()
     } catch (error) {
       console.error('Error adding notion:', error)

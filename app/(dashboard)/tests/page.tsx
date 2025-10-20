@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,8 +18,9 @@ import { TestAttemptsModal } from '@/components/dashboard/TestAttemptsModal'
 import { FullTestAttemptsModal } from '@/components/dashboard/FullTestAttemptsModal'
 import { Plus, Loader2 } from 'lucide-react'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-import { Test, TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
+import { TestWithAttempts, FullTestWithAttempts, FullTestSubtest } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
+import { useDashboardData } from '@/lib/state/dashboard-data'
 
 const TEST_TYPES = [
   { value: 'all', label: 'Tous' },
@@ -29,9 +29,7 @@ const TEST_TYPES = [
 ]
 
 export default function TestsPage() {
-  const [tests, setTests] = useState<TestWithAttempts[]>([])
-  const [fullTests, setFullTests] = useState<FullTestWithAttempts[]>([])
-  const [loading, setLoading] = useState(true)
+  const { tests, fullTests, refreshTests, refreshFullTests } = useDashboardData()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFullTestFormOpen, setIsFullTestFormOpen] = useState(false)
   const [selectedTest, setSelectedTest] = useState<TestWithAttempts | null>(null)
@@ -42,118 +40,36 @@ export default function TestsPage() {
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    loadTests()
-    loadFullTests()
-  }, [])
-
-  const loadTests = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      const { data: testsData } = await supabase
-        .from('tests')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('date', { ascending: false })
-
-      if (testsData) {
-        // Load attempts for each test
-        const testsWithAttempts = await Promise.all(
-          testsData.map(async (test: Test) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: attempts } = await (supabase as any)
-              .from('test_attempts')
-              .select('*')
-              .eq('test_id', test.id)
-              .order('date', { ascending: false })
-
-            return {
-              ...test,
-              attempts: attempts || [],
-            }
-          })
-        )
-        setTests(testsWithAttempts as TestWithAttempts[])
-      }
-    } catch (error) {
-      console.error('Error loading tests:', error)
-    } finally {
-      setLoading(false)
+    if (!tests || !selectedTest) return
+    const updated = tests.find((test) => test.id === selectedTest.id)
+    if (updated && updated !== selectedTest) {
+      setSelectedTest(updated)
     }
-  }
+  }, [tests, selectedTest])
 
-  const loadFullTests = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: fullTestsData } = await (supabase as any)
-        .from('full_tests')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('date', { ascending: false })
-
-      if (fullTestsData) {
-        // Load subtests and attempts for each full test
-        const fullTestsWithData = await Promise.all(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          fullTestsData.map(async (fullTest: any) => {
-            // Load subtests
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: subtests } = await (supabase as any)
-              .from('full_test_subtests')
-              .select('*')
-              .eq('full_test_id', fullTest.id)
-              .order('created_at', { ascending: true })
-
-            // Load attempts
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: attemptsData } = await (supabase as any)
-              .from('full_test_attempts')
-              .select('*')
-              .eq('full_test_id', fullTest.id)
-              .order('date', { ascending: false })
-
-            // Load subtests for each attempt
-            const attempts = attemptsData ? await Promise.all(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              attemptsData.map(async (attempt: any) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: attemptSubtests } = await (supabase as any)
-                  .from('full_test_attempt_subtests')
-                  .select('*')
-                  .eq('attempt_id', attempt.id)
-
-                return {
-                  ...attempt,
-                  subtests: attemptSubtests || [],
-                }
-              })
-            ) : []
-
-            return {
-              ...fullTest,
-              subtests: subtests || [],
-              attempts,
-            }
-          })
-        )
-        setFullTests(fullTestsWithData as FullTestWithAttempts[])
-      }
-    } catch (error) {
-      console.error('Error loading full tests:', error)
+  useEffect(() => {
+    if (!fullTests || !selectedFullTest) return
+    const updated = fullTests.find((test) => test.id === selectedFullTest.id)
+    if (updated && updated !== selectedFullTest) {
+      setSelectedFullTest(updated)
     }
+  }, [fullTests, selectedFullTest])
+
+  if (!tests || !fullTests) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   const handleFormSuccess = () => {
-    loadTests()
+    void refreshTests()
     setIsFormOpen(false)
   }
 
   const handleFullTestFormSuccess = () => {
-    loadFullTests()
+    void refreshFullTests()
     setIsFullTestFormOpen(false)
   }
 
@@ -342,14 +258,6 @@ export default function TestsPage() {
     )
 
   const fullDesktopContent = fullListContent
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6 md:space-y-10 md:pt-4">
@@ -549,7 +457,7 @@ export default function TestsPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedTest(null)
         }}
-        onSuccess={loadTests}
+        onSuccess={() => void refreshTests()}
       />
 
       <FullTestAttemptsModal
@@ -558,7 +466,7 @@ export default function TestsPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedFullTest(null)
         }}
-        onSuccess={loadFullTests}
+        onSuccess={() => void refreshFullTests()}
       />
     </div>
   )

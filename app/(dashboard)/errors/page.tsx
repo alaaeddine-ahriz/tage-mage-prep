@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,14 +27,14 @@ import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import Image from 'next/image'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 import { FullscreenImageViewer } from '@/components/ui/fullscreen-image-viewer'
+import { createClient } from '@/lib/supabase/client'
+import { useDashboardData } from '@/lib/state/dashboard-data'
+import type { Error as SupabaseError } from '@/lib/types/database.types'
 
 export default function ErrorsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [errors, setErrors] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { errors, refreshErrors } = useDashboardData()
   const [filter, setFilter] = useState('all')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedError, setSelectedError] = useState<any>(null)
+  const [selectedError, setSelectedError] = useState<SupabaseError | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -45,63 +44,69 @@ export default function ErrorsPage() {
   const showMobileFilters = useIsMobile()
 
   useEffect(() => {
-    loadErrors()
-  }, [])
-
-  const loadErrors = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
-        .from('errors')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('next_review_at', { ascending: true })
-
-      setErrors(data || [])
-    } catch (error) {
-      console.error('Error loading errors:', error)
-    } finally {
-      setLoading(false)
+    if (!errors || !selectedError) return
+    const updated = errors.find((err) => err.id === selectedError.id)
+    if (updated && updated !== selectedError) {
+      setSelectedError(updated)
     }
-  }
+  }, [errors, selectedError])
 
   const handleFormSuccess = () => {
-    loadErrors()
     setIsFormOpen(false)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errorsDue = errors.filter((e: any) => isDueForReview(e.next_review_at))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errorsUpcoming = errors.filter((e: any) => !isDueForReview(e.next_review_at))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errorsMastered = errors.filter((e: any) => e.mastery_level >= 4)
+  if (!errors) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
-  const filteredErrorsDue = filter === 'all' 
-    ? errorsDue 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : errorsDue.filter((e: any) => e.subtest === filter)
+  const errorsDue = useMemo(
+    () => errors.filter((error) => isDueForReview(error.next_review_at)),
+    [errors]
+  )
 
-  const filteredErrorsUpcoming = filter === 'all' 
-    ? errorsUpcoming 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : errorsUpcoming.filter((e: any) => e.subtest === filter)
+  const errorsUpcoming = useMemo(
+    () => errors.filter((error) => !isDueForReview(error.next_review_at)),
+    [errors]
+  )
 
-  const openErrorModal = (error: unknown) => {
+  const errorsMastered = useMemo(
+    () => errors.filter((error) => error.mastery_level >= 4),
+    [errors]
+  )
+
+  const filteredErrorsDue = useMemo(
+    () =>
+      filter === 'all'
+        ? errorsDue
+        : errorsDue.filter((error) => error.subtest === filter),
+    [errorsDue, filter]
+  )
+
+  const filteredErrorsUpcoming = useMemo(
+    () =>
+      filter === 'all'
+        ? errorsUpcoming
+        : errorsUpcoming.filter((error) => error.subtest === filter),
+    [errorsUpcoming, filter]
+  )
+
+  const combinedFilteredErrors = useMemo(
+    () => [...filteredErrorsDue, ...filteredErrorsUpcoming],
+    [filteredErrorsDue, filteredErrorsUpcoming]
+  )
+
+  const openErrorModal = (error: SupabaseError) => {
     setSelectedError(error)
     setFullscreenImage(null)
-    // Find index in the combined list for carousel
-    const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const index = allErrors.findIndex((e: any) => (e as any).id === (error as any).id)
+    const index = combinedFilteredErrors.findIndex((e) => e.id === error.id)
     setCurrentIndex(index >= 0 ? index : 0)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleReview = async (success: boolean, errorToReview?: any) => {
+  const handleReview = async (success: boolean, errorToReview?: SupabaseError) => {
     const error = errorToReview || selectedError
     if (!error) return
     setUpdating(true)
@@ -145,8 +150,7 @@ export default function ErrorsPage() {
           : 'On révise demain !'
       )
 
-      // Reload errors
-      await loadErrors()
+      await refreshErrors()
       
       // In mobile carousel, don't close - just stay on same index
       if (!isMobile) {
@@ -158,14 +162,6 @@ export default function ErrorsPage() {
     } finally {
       setUpdating(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
   }
 
   return (
@@ -285,8 +281,7 @@ export default function ErrorsPage() {
             À réviser aujourd&apos;hui ({filteredErrorsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {filteredErrorsDue.map((error: any) => (
+            {filteredErrorsDue.map((error) => (
               <div
                 key={error.id}
                 className="relative h-48 w-full overflow-hidden rounded-lg border p-4 text-left transition-all hover:shadow-lg"
@@ -297,7 +292,7 @@ export default function ErrorsPage() {
                   style={{ backgroundImage: error.image_url ? `url(${error.image_url})` : 'url(/gradient.jpeg)' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                
+
                 {/* Button to open modal */}
                 <button
                   onClick={() => openErrorModal(error)}
@@ -309,19 +304,15 @@ export default function ErrorsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                   </svg>
                 </button>
-                
-                  {/* Content */}
-                  <div className="relative flex h-full flex-col justify-between pointer-events-none">
-                    <div className="flex items-start gap-2">
-                      {/* <span className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
-                        <Clock className="mr-1 h-3 w-3" />
-                        Réviser
-                      </span> */}
-                      <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
-                        {SUBTEST_LABELS[error.subtest] || error.subtest}
-                      </span>
-                    </div>
-                  
+
+                {/* Content */}
+                <div className="relative flex h-full flex-col justify-between pointer-events-none">
+                  <div className="flex items-start gap-2">
+                    <span className="inline-flex items-center rounded-md bg-background/90 px-2 py-1 text-xs font-medium">
+                      {SUBTEST_LABELS[error.subtest] || error.subtest}
+                    </span>
+                  </div>
+
                   <div className="space-y-2">
                     {error.explanation && (
                       <p className="text-base font-medium text-white line-clamp-2">
@@ -333,7 +324,7 @@ export default function ErrorsPage() {
                       <span>{error.review_count} révisions</span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
-                      <div 
+                      <div
                         className="h-full bg-white transition-all"
                         style={{ width: `${(error.mastery_level / 5) * 100}%` }}
                       />
@@ -353,8 +344,7 @@ export default function ErrorsPage() {
             Prochaines révisions ({filteredErrorsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {filteredErrorsUpcoming.map((error: any) => (
+            {filteredErrorsUpcoming.map((error) => (
               <div
                 key={error.id}
                 className="relative h-48 w-full overflow-hidden rounded-lg border transition-all hover:shadow-md"
@@ -425,7 +415,7 @@ export default function ErrorsPage() {
         )}
 
       {/* Empty State */}
-      {errors.length === 0 && !loading && (
+      {errors.length === 0 && (
         <Card className="mt-8">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Clock className="h-12 w-12 text-muted-foreground mb-4" />
@@ -518,18 +508,17 @@ export default function ErrorsPage() {
             setSelectedError(null)
             setFullscreenImage(null)
           }}
-          items={[...filteredErrorsDue, ...filteredErrorsUpcoming]}
+          items={combinedFilteredErrors}
           currentIndex={currentIndex}
           onIndexChange={(index) => {
             setCurrentIndex(index)
-            const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
-            setSelectedError(allErrors[index])
+            const nextError = combinedFilteredErrors[index] ?? null
+            setSelectedError(nextError)
             setFullscreenImage(null)
           }}
         >
           {(item) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const error = item as any
+            const error = item as SupabaseError
             return (
               <div className={`space-y-6 ${hasBottomNav ? 'pb-40' : 'pb-24'}`}>
                 {/* Badge subtest */}
@@ -577,14 +566,14 @@ export default function ErrorsPage() {
                       type="button"
                       onClick={() =>
                         setFullscreenImage({
-                          src: error.image_url,
+                          src: error.image_url!,
                           alt: error.explanation || 'Erreur',
                         })
                       }
                       className="relative h-[40vh] w-full overflow-hidden rounded-xl bg-muted cursor-zoom-in active:cursor-zoom-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <Image
-                        src={error.image_url}
+                        src={error.image_url!}
                         alt={error.explanation || 'Erreur'}
                         fill
                         className="object-cover transition-transform duration-200 hover:scale-105"

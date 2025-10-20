@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -25,14 +24,15 @@ import { Plus, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import { isDueForReview, updateMasteryLevel, calculateNextReviewDate, getNextReviewInterval } from '@/lib/utils/spaced-repetition'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-import type { Notion } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 import Image from 'next/image'
 import { FullscreenImageViewer } from '@/components/ui/fullscreen-image-viewer'
+import { useDashboardData } from '@/lib/state/dashboard-data'
+import type { Notion } from '@/lib/types/database.types'
+import { createClient } from '@/lib/supabase/client'
 
 export default function NotionsPage() {
-  const [notions, setNotions] = useState<Notion[]>([])
-  const [loading, setLoading] = useState(true)
+  const { notions, refreshNotions } = useDashboardData()
   const [selectedNotion, setSelectedNotion] = useState<Notion | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
@@ -44,48 +44,49 @@ export default function NotionsPage() {
   const showMobileFilters = useIsMobile()
 
   useEffect(() => {
-    loadNotions()
-  }, [])
-
-  const loadNotions = async () => {
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
-        .from('notions')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('next_review_at', { ascending: true })
-
-      setNotions(data || [])
-    } catch (error) {
-      console.error('Error loading notions:', error)
-    } finally {
-      setLoading(false)
+    if (!notions || !selectedNotion) return
+    const updated = notions.find((notion) => notion.id === selectedNotion.id)
+    if (updated && updated !== selectedNotion) {
+      setSelectedNotion(updated)
     }
-  }
+  }, [notions, selectedNotion])
 
   const handleFormSuccess = () => {
-    loadNotions()
     setIsFormOpen(false)
   }
 
-  // Filter notions by subtest
-  const filteredNotions = filter === 'all' 
-    ? notions 
-    : notions.filter((n) => n.subtest === filter)
+  if (!notions) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
-  const notionsDue = filteredNotions.filter((n) => isDueForReview(n.next_review_at))
-  const notionsUpcoming = filteredNotions.filter((n) => !isDueForReview(n.next_review_at))
+  // Filter notions by subtest
+  const filteredNotions = useMemo(
+    () => (filter === 'all' ? notions : notions.filter((n) => n.subtest === filter)),
+    [filter, notions]
+  )
+
+  const notionsDue = useMemo(
+    () => filteredNotions.filter((n) => isDueForReview(n.next_review_at)),
+    [filteredNotions]
+  )
+  const notionsUpcoming = useMemo(
+    () => filteredNotions.filter((n) => !isDueForReview(n.next_review_at)),
+    [filteredNotions]
+  )
+  const combinedNotions = useMemo(
+    () => [...notionsDue, ...notionsUpcoming],
+    [notionsDue, notionsUpcoming]
+  )
 
   const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
     setFullscreenImage(null)
     // Find index in the combined list for carousel
-    const allNotions = [...notionsDue, ...notionsUpcoming]
-    const index = allNotions.findIndex(n => n.id === notion.id)
+    const index = combinedNotions.findIndex((n) => n.id === notion.id)
     setCurrentIndex(index >= 0 ? index : 0)
   }
 
@@ -135,8 +136,7 @@ export default function NotionsPage() {
           : 'On révise demain !'
       )
 
-      // Reload notions
-      await loadNotions()
+      await refreshNotions()
       
       // In mobile carousel, don't close - just stay on same index
       if (!isMobile) {
@@ -150,13 +150,8 @@ export default function NotionsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  const combinedFiltersEmpty =
+    notions.length > 0 && notionsDue.length === 0 && notionsUpcoming.length === 0
 
   return (
     <div className="space-y-6 md:space-y-10 md:pt-4">
@@ -400,9 +395,7 @@ export default function NotionsPage() {
         </div>
       )}
 
-      {notions.length > 0 &&
-        notionsDue.length === 0 &&
-        notionsUpcoming.length === 0 && (
+      {combinedFiltersEmpty && (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/60 p-6 text-center text-sm text-muted-foreground">
             Aucune notion ne correspond aux filtres sélectionnés.
           </div>
@@ -497,12 +490,12 @@ export default function NotionsPage() {
             setSelectedNotion(null)
             setFullscreenImage(null)
           }}
-          items={[...notionsDue, ...notionsUpcoming]}
+          items={combinedNotions}
           currentIndex={currentIndex}
           onIndexChange={(index) => {
             setCurrentIndex(index)
-            const allNotions = [...notionsDue, ...notionsUpcoming]
-            setSelectedNotion(allNotions[index])
+            const nextNotion = combinedNotions[index] ?? null
+            setSelectedNotion(nextNotion)
             setFullscreenImage(null)
           }}
         >

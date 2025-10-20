@@ -207,6 +207,10 @@ export interface Database {
           image_url: string | null
           correct_answer: string | null
           explanation: string | null
+          title: string | null
+          mastery_level: number
+          next_review_at: string
+          review_count: number
           understood: boolean
           reviewed_at: string | null
           tags: string[] | null
@@ -220,6 +224,10 @@ export interface Database {
           image_url?: string | null
           correct_answer?: string | null
           explanation?: string | null
+          title?: string | null
+          mastery_level?: number
+          next_review_at?: string
+          review_count?: number
           understood?: boolean
           reviewed_at?: string | null
           tags?: string[] | null
@@ -233,6 +241,10 @@ export interface Database {
           image_url?: string | null
           correct_answer?: string | null
           explanation?: string | null
+          title?: string | null
+          mastery_level?: number
+          next_review_at?: string
+          review_count?: number
           understood?: boolean
           reviewed_at?: string | null
           tags?: string[] | null
@@ -376,4 +388,3 @@ export interface FullTestWithAttempts extends FullTest {
   subtests: FullTestSubtest[]
   attempts: FullTestAttempt[]
 }
-
