@@ -28,6 +28,7 @@ import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import type { Notion } from '@/lib/types/database.types'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
 import Image from 'next/image'
+import { FullscreenImageViewer } from '@/components/ui/fullscreen-image-viewer'
 
 export default function NotionsPage() {
   const [notions, setNotions] = useState<Notion[]>([])
@@ -37,6 +38,7 @@ export default function NotionsPage() {
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
   const isMobile = useIsMobile(1500)
   const hasBottomNav = useIsMobile(768)
 
@@ -79,6 +81,7 @@ export default function NotionsPage() {
 
   const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
+    setFullscreenImage(null)
     // Find index in the combined list for carousel
     const allNotions = [...notionsDue, ...notionsUpcoming]
     const index = allNotions.findIndex(n => n.id === notion.id)
@@ -487,13 +490,17 @@ export default function NotionsPage() {
       {isMobile && (
         <MobileCarousel
           isOpen={!!selectedNotion}
-          onClose={() => setSelectedNotion(null)}
+          onClose={() => {
+            setSelectedNotion(null)
+            setFullscreenImage(null)
+          }}
           items={[...notionsDue, ...notionsUpcoming]}
           currentIndex={currentIndex}
           onIndexChange={(index) => {
             setCurrentIndex(index)
             const allNotions = [...notionsDue, ...notionsUpcoming]
             setSelectedNotion(allNotions[index])
+            setFullscreenImage(null)
           }}
         >
           {(item) => {
@@ -514,14 +521,23 @@ export default function NotionsPage() {
                 </div>
 
                 {notion.image_url && (
-                  <div className="relative w-full overflow-hidden rounded-xl border bg-muted/40 aspect-video">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFullscreenImage({
+                        src: notion.image_url!,
+                        alt: notion.title || 'Notion',
+                      })
+                    }
+                    className="relative aspect-video w-full overflow-hidden rounded-xl border bg-muted/40 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
                     <Image
                       src={notion.image_url}
                       alt={notion.title || 'Notion'}
                       fill
                       className="object-contain"
                     />
-                  </div>
+                  </button>
                 )}
 
                 {/* Title */}
@@ -595,6 +611,14 @@ export default function NotionsPage() {
             {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Je sais'}
           </FloatingButton>
         </FloatingButtonsContainer>
+      )}
+
+      {fullscreenImage && (
+        <FullscreenImageViewer
+          src={fullscreenImage.src}
+          alt={fullscreenImage.alt}
+          onClose={() => setFullscreenImage(null)}
+        />
       )}
     </div>
   )

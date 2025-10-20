@@ -27,6 +27,7 @@ import { toast } from 'sonner'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import Image from 'next/image'
 import { SUBTESTS, SUBTEST_LABELS } from '@/lib/constants/subtests'
+import { FullscreenImageViewer } from '@/components/ui/fullscreen-image-viewer'
 
 export default function ErrorsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +39,7 @@ export default function ErrorsPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [updating, setUpdating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
   const isMobile = useIsMobile(1500)
   const hasBottomNav = useIsMobile(768)
 
@@ -89,6 +91,7 @@ export default function ErrorsPage() {
 
   const openErrorModal = (error: unknown) => {
     setSelectedError(error)
+    setFullscreenImage(null)
     // Find index in the combined list for carousel
     const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -514,13 +517,17 @@ export default function ErrorsPage() {
       {isMobile && (
         <MobileCarousel
           isOpen={!!selectedError}
-          onClose={() => setSelectedError(null)}
+          onClose={() => {
+            setSelectedError(null)
+            setFullscreenImage(null)
+          }}
           items={[...filteredErrorsDue, ...filteredErrorsUpcoming]}
           currentIndex={currentIndex}
           onIndexChange={(index) => {
             setCurrentIndex(index)
             const allErrors = [...filteredErrorsDue, ...filteredErrorsUpcoming]
             setSelectedError(allErrors[index])
+            setFullscreenImage(null)
           }}
         >
           {(item) => {
@@ -569,28 +576,24 @@ export default function ErrorsPage() {
                   // With image: traditional layout
                   <>
                     {/* Image - clickable to zoom */}
-                    <div 
-                      className="relative w-full h-[40vh] rounded-xl overflow-hidden bg-muted cursor-zoom-in active:cursor-zoom-out"
-                      onClick={(e) => {
-                        const img = e.currentTarget.querySelector('img')
-                        if (img) {
-                          // Toggle fullscreen zoom
-                          if (!document.fullscreenElement) {
-                            e.currentTarget.requestFullscreen?.()
-                          } else {
-                            document.exitFullscreen?.()
-                          }
-                        }
-                      }}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFullscreenImage({
+                          src: error.image_url,
+                          alt: error.explanation || 'Erreur',
+                        })
+                      }
+                      className="relative h-[40vh] w-full overflow-hidden rounded-xl bg-muted cursor-zoom-in active:cursor-zoom-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <Image
                         src={error.image_url}
-                        alt="Erreur"
+                        alt={error.explanation || 'Erreur'}
                         fill
                         className="object-cover transition-transform duration-200 hover:scale-105"
                         priority
                       />
-                    </div>
+                    </button>
                     
                     {/* Explanation */}
                     {error.explanation && (
@@ -660,6 +663,14 @@ export default function ErrorsPage() {
             {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Je sais'}
           </FloatingButton>
         </FloatingButtonsContainer>
+      )}
+
+      {fullscreenImage && (
+        <FullscreenImageViewer
+          src={fullscreenImage.src}
+          alt={fullscreenImage.alt}
+          onClose={() => setFullscreenImage(null)}
+        />
       )}
     </div>
   )
