@@ -108,19 +108,38 @@ export function MobileCarousel({
         {/* Navigation Dots */}
         {items.length > 1 && (
           <div className="flex justify-center gap-2">
-            {items.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => onIndexChange(index)}
-                className={cn(
-                  "h-2 rounded-full transition-all",
+            {(() => {
+              const maxIndicators = 5
+              const totalItems = items.length
+              const visibleCount = Math.min(maxIndicators, totalItems)
+
+              let startIndex = 0
+              if (totalItems > maxIndicators) {
+                startIndex = currentIndex - Math.floor(visibleCount / 2)
+                if (startIndex < 0) {
+                  startIndex = 0
+                }
+                if (startIndex + visibleCount > totalItems) {
+                  startIndex = totalItems - visibleCount
+                }
+              }
+
+              const indicatorIndexes = Array.from({ length: visibleCount }, (_, i) => startIndex + i)
+
+              return indicatorIndexes.map((index) => (
+                <button
+                  key={index}
+                  onClick={() => onIndexChange(index)}
+                  className={cn(
+                    "h-2 rounded-full transition-all",
                   index === currentIndex
                     ? "w-8 bg-primary"
                     : "w-2 bg-muted-foreground/30"
                 )}
                 aria-label={`Aller à l'item ${index + 1}`}
               />
-            ))}
+              ))
+            })()}
           </div>
         )}
 

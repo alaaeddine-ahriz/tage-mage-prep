@@ -48,7 +48,7 @@ export default function ErrorsPage() {
   const [errorToDelete, setErrorToDelete] = useState<SupabaseError | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1200)
+  const isMobile = useIsMobile(1400)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !errors
@@ -101,6 +101,26 @@ export default function ErrorsPage() {
     () => [...filteredErrorsDue, ...filteredErrorsUpcoming],
     [filteredErrorsDue, filteredErrorsUpcoming]
   )
+
+  useEffect(() => {
+    if (!selectedError) return
+
+    const nextIndex = combinedFilteredErrors.findIndex((err) => err.id === selectedError.id)
+    if (nextIndex === -1) {
+      setSelectedError(null)
+      setCurrentIndex(0)
+      return
+    }
+
+    const indexedError = combinedFilteredErrors[nextIndex] as SupabaseError
+    if (indexedError !== selectedError) {
+      setSelectedError(indexedError)
+    }
+
+    if (nextIndex !== currentIndex) {
+      setCurrentIndex(nextIndex)
+    }
+  }, [combinedFilteredErrors, selectedError, currentIndex])
 
   const openErrorModal = (error: SupabaseError) => {
     setSelectedError(error)
@@ -155,6 +175,20 @@ export default function ErrorsPage() {
     if (!error) return
     setUpdating(true)
 
+    const nextTarget =
+      isMobile && combinedFilteredErrors.length > 0
+        ? (() => {
+            const nextIndex = currentIndex + 1
+            if (nextIndex < combinedFilteredErrors.length) {
+              return {
+                error: combinedFilteredErrors[nextIndex] as SupabaseError,
+                index: nextIndex,
+              }
+            }
+            return null
+          })()
+        : null
+
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -196,8 +230,15 @@ export default function ErrorsPage() {
 
       await refreshErrors()
       
-      // In mobile carousel, don't close - just stay on same index
-      if (!isMobile) {
+      if (isMobile) {
+        if (nextTarget) {
+          setSelectedError(nextTarget.error)
+          setCurrentIndex(nextTarget.index)
+        } else {
+          setSelectedError(null)
+          setCurrentIndex(0)
+        }
+      } else {
         setSelectedError(null)
       }
     } catch (error) {
@@ -334,7 +375,7 @@ export default function ErrorsPage() {
       {/* Errors to Review */}
       {filteredErrorsDue.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
             À réviser aujourd&apos;hui ({filteredErrorsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -397,7 +438,7 @@ export default function ErrorsPage() {
       {/* Upcoming Errors */}
       {filteredErrorsUpcoming.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
             Prochaines révisions ({filteredErrorsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

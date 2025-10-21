@@ -48,7 +48,7 @@ export default function NotionsPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [filter, setFilter] = useState('all')
   const [fullscreenImage, setFullscreenImage] = useState<{ src: string; alt: string } | null>(null)
-  const isMobile = useIsMobile(1200)
+  const isMobile = useIsMobile(1400)
   const hasBottomNav = useIsMobile(768)
   const showMobileFilters = useIsMobile()
   const isLoading = !notions
@@ -84,6 +84,26 @@ export default function NotionsPage() {
     () => [...notionsDue, ...notionsUpcoming],
     [notionsDue, notionsUpcoming]
   )
+
+  useEffect(() => {
+    if (!selectedNotion) return
+
+    const nextIndex = combinedNotions.findIndex((notion) => notion.id === selectedNotion.id)
+    if (nextIndex === -1) {
+      setSelectedNotion(null)
+      setCurrentIndex(0)
+      return
+    }
+
+    const indexedNotion = combinedNotions[nextIndex] as Notion
+    if (indexedNotion !== selectedNotion) {
+      setSelectedNotion(indexedNotion)
+    }
+
+    if (nextIndex !== currentIndex) {
+      setCurrentIndex(nextIndex)
+    }
+  }, [combinedNotions, selectedNotion, currentIndex])
 
   const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
@@ -140,6 +160,20 @@ export default function NotionsPage() {
     if (!notion) return
     setUpdating(true)
 
+    const nextTarget =
+      isMobile && combinedNotions.length > 0
+        ? (() => {
+            const nextIndex = currentIndex + 1
+            if (nextIndex < combinedNotions.length) {
+              return {
+                notion: combinedNotions[nextIndex] as Notion,
+                index: nextIndex,
+              }
+            }
+            return null
+          })()
+        : null
+
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -182,8 +216,15 @@ export default function NotionsPage() {
 
       await refreshNotions()
       
-      // In mobile carousel, don't close - just stay on same index
-      if (!isMobile) {
+      if (isMobile) {
+        if (nextTarget) {
+          setSelectedNotion(nextTarget.notion)
+          setCurrentIndex(nextTarget.index)
+        } else {
+          setSelectedNotion(null)
+          setCurrentIndex(0)
+        }
+      } else {
         setSelectedNotion(null)
       }
     } catch (error) {
@@ -327,7 +368,7 @@ export default function NotionsPage() {
       {/* Notions to Review */}
       {notionsDue.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
             À réviser aujourd&apos;hui ({notionsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -391,7 +432,7 @@ export default function NotionsPage() {
       {/* Upcoming Notions */}
       {notionsUpcoming.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
             Prochaines révisions ({notionsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
