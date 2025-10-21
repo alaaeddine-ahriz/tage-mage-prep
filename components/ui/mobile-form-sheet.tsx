@@ -36,11 +36,14 @@ export function MobileFormSheet({
   useEffect(() => {
     if (isMobile && open) {
       document.body.style.overflow = 'hidden'
+      document.body.style.overscrollBehavior = 'none'
     } else {
       document.body.style.overflow = ''
+      document.body.style.overscrollBehavior = ''
     }
     return () => {
       document.body.style.overflow = ''
+      document.body.style.overscrollBehavior = ''
     }
   }, [isMobile, open])
 

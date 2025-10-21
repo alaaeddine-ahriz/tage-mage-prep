@@ -13,7 +13,9 @@ interface FullscreenImageViewerProps {
 export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageViewerProps) {
   useEffect(() => {
     const originalOverflow = document.body.style.overflow
+    const originalOverscroll = document.body.style.overscrollBehavior
     document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -25,6 +27,7 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
 
     return () => {
       document.body.style.overflow = originalOverflow
+      document.body.style.overscrollBehavior = originalOverscroll
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [onClose])
