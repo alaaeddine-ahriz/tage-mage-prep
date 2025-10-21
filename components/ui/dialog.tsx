@@ -9,6 +9,16 @@ import { cn } from "@/lib/utils"
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const { open } = props
+  
+  // Preserve overscroll-behavior when Dialog opens/closes
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overscrollBehavior = 'none'
+    }
+    // Don't reset on close - let it stay as 'none'
+  }, [open])
+  
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 

@@ -7,6 +7,16 @@ import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  const { open } = props
+  
+  // Preserve overscroll-behavior when Sheet opens/closes
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overscrollBehavior = 'none'
+    }
+    // Don't reset on close - let it stay as 'none'
+  }, [open])
+  
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 

@@ -10,7 +10,7 @@ Après avoir ouvert et fermé une modale en format mobile, l'effet de bounce (ov
 
 ## ✅ Solution
 
-La correction a été appliquée en deux parties :
+La correction a été appliquée en trois parties :
 
 ### 1. CSS global permanent (`app/globals.css`)
 
@@ -30,7 +30,47 @@ Ajout de `overscroll-behavior-y: none` de façon permanente sur `html` et `body`
 
 **Pourquoi ?** Cela désactive l'effet de bounce de façon permanente sur toute l'application, indépendamment des manipulations JavaScript.
 
-### 2. Gestion dans les modales
+### 2. Gestion dans les composants Radix UI (`Dialog` et `Sheet`)
+
+Modification des composants de base de Radix UI pour préserver `overscrollBehavior` :
+
+#### `components/ui/dialog.tsx`
+```typescript
+function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const { open } = props
+  
+  // Preserve overscroll-behavior when Dialog opens/closes
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overscrollBehavior = 'none'
+    }
+    // Don't reset on close - let it stay as 'none'
+  }, [open])
+  
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+}
+```
+
+#### `components/ui/sheet.tsx`
+```typescript
+function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  const { open } = props
+  
+  // Preserve overscroll-behavior when Sheet opens/closes
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overscrollBehavior = 'none'
+    }
+    // Don't reset on close - let it stay as 'none'
+  }, [open])
+  
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+}
+```
+
+**Pourquoi ?** Radix UI bloque automatiquement `overflow` mais ne gère pas `overscrollBehavior`. Ces composants de base sont utilisés par tous les Dialog/Sheet de l'application, donc la correction s'applique partout.
+
+### 3. Gestion dans les modales custom
 
 Modification de tous les composants qui manipulent le scroll du body pour également gérer `overscrollBehavior` :
 
@@ -132,19 +172,21 @@ Le layout principal (`app/(dashboard)/layout.tsx`) **ne doit PAS** avoir de scro
 
 ## 🎯 Résultat
 
-- ✅ Bounce désactivé de façon permanente
-- ✅ Pas de réapparition après fermeture de modale
+- ✅ Bounce désactivé de façon permanente (CSS global)
+- ✅ Pas de réapparition après fermeture de modale (Dialog/Sheet/Custom)
 - ✅ Comportement cohérent sur tous les composants
 - ✅ Scroll uniquement sur le body, pas sur les containers internes
+- ✅ Barres de scroll invisibles (scrollbar-width: none)
 - ✅ Build réussie sans erreurs
 
 ## 🧪 Tests recommandés
 
-1. Ouvrir et fermer une modale de formulaire (ajout test, notion, erreur)
-2. Ouvrir et fermer le carousel de notions
-3. Ouvrir et fermer une modale d'image en plein écran
-4. Ouvrir et fermer une modale de tentatives de test
-5. Vérifier que dans tous les cas, le bounce ne revient pas
+1. **Modales de formulaire** : Ajouter test, notion, erreur → vérifier pas de bounce
+2. **Carousel de notions** : Naviguer entre plusieurs notions → vérifier pas de bounce
+3. **Image en plein écran** : Ouvrir/fermer → vérifier pas de bounce
+4. **Modale de tentatives** : Tests individuels et complets → vérifier pas de bounce
+5. **Préférences de retake** : Ouvrir depuis Header ou Dashboard → vérifier pas de bounce
+6. **Dialog de confirmation** : Supprimer une erreur/notion → vérifier pas de bounce
 
 Sur iOS Safari (le plus sensible au bounce) :
 - Essayer de "tirer" l'écran vers le bas/haut
