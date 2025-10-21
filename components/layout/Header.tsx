@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,11 +13,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { signOut } from '@/lib/supabase/auth'
-import { LogOut, Moon, Sun, User } from 'lucide-react'
+import { LogOut, Moon, Sun, User, Settings } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { DASHBOARD_NAV_ITEMS } from '@/lib/constants/navigation'
+import { RetakePreferencesForm } from '@/components/forms/RetakePreferencesForm'
 
 interface HeaderProps {
   user: {
@@ -32,6 +41,7 @@ export function Header({ user }: HeaderProps) {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -113,6 +123,10 @@ export function Header({ user }: HeaderProps) {
               <User className="mr-2 h-4 w-4" />
               Profil
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" />
+              Préférences
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
@@ -121,6 +135,19 @@ export function Header({ user }: HeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Dialog des préférences - Desktop only */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Préférences de révision</DialogTitle>
+            <DialogDescription>
+              Configurez le délai après lequel vous souhaitez revoir vos tests.
+            </DialogDescription>
+          </DialogHeader>
+          <RetakePreferencesForm onSaved={() => setIsSettingsOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Calendar, Loader2, LogOut, Moon, Sun } from 'lucide-react'
+import { Calendar, Loader2, LogOut, Moon, Sun, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { MobileFormSheet } from '@/components/ui/mobile-form-sheet'
 import { SUBTEST_LABELS } from '@/lib/constants/subtests'
 import {
   Notion,
@@ -17,6 +18,7 @@ import { signOut } from '@/lib/supabase/auth'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useDashboardData } from '@/lib/state/dashboard-data'
 import { WorkCalendar } from '@/components/dashboard/WorkCalendar'
+import { RetakePreferencesForm } from '@/components/forms/RetakePreferencesForm'
 import {
   isTestDueForRetake,
   isFullTestDueForRetake,
@@ -25,6 +27,7 @@ import {
 
 export default function ProfilePage() {
   const [userEmail, setUserEmail] = useState<string>('Utilisateur')
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
   const router = useRouter()
   const isMobile = useIsMobile()
@@ -225,34 +228,53 @@ export default function ProfilePage() {
 
       {/* Mobile: Theme Toggle & Sign Out - At the bottom */}
       {isMobile && (
-        <div className="flex gap-3">
+        <div className="space-y-3">
           <Button
-            onClick={handleThemeToggle}
+            onClick={() => setIsSettingsOpen(true)}
             variant="outline"
-            className="flex-1 h-12 rounded-xl"
+            className="w-full h-12 rounded-xl"
           >
-            {isDarkMode ? (
-              <>
-                <Sun className="h-5 w-5 mr-2" />
-                Mode clair
-              </>
-            ) : (
-              <>
-                <Moon className="h-5 w-5 mr-2" />
-                Mode sombre
-              </>
-            )}
+            <Settings className="h-5 w-5 mr-2" />
+            Préférences de révision
           </Button>
-          <Button
-            onClick={handleSignOut}
-            variant="destructive"
-            className="flex-1 h-12 rounded-xl"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            Déconnexion
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleThemeToggle}
+              variant="outline"
+              className="flex-1 h-12 rounded-xl"
+            >
+              {isDarkMode ? (
+                <>
+                  <Sun className="h-5 w-5 mr-2" />
+                  Mode clair
+                </>
+              ) : (
+                <>
+                  <Moon className="h-5 w-5 mr-2" />
+                  Mode sombre
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleSignOut}
+              variant="destructive"
+              className="flex-1 h-12 rounded-xl"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Déconnexion
+            </Button>
+          </div>
         </div>
       )}
+
+      {/* Préférences */}
+      <MobileFormSheet
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        title="Préférences de révision"
+      >
+        <RetakePreferencesForm onSaved={() => setIsSettingsOpen(false)} />
+      </MobileFormSheet>
     </div>
   )
 }

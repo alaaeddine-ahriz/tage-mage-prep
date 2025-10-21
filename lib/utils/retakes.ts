@@ -53,6 +53,7 @@ export async function getUserRetakeIntervalDays(
   userId: string,
   fallback: number = DEFAULT_RETAKE_INTERVAL_DAYS
 ): Promise<number> {
+  // @ts-ignore - user_preferences table exists but may not be in generated types yet
   const { data, error } = await supabase
     .from('user_preferences')
     .select('default_retake_delay_days')

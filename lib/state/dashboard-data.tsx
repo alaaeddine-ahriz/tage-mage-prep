@@ -270,6 +270,18 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     }
   }, [ensureUser, supabase])
 
+  // Écouter les mises à jour des préférences de retake
+  useEffect(() => {
+    const handleRetakePreferencesUpdate = () => {
+      void refreshRetakePreferences()
+    }
+
+    window.addEventListener('retake-preferences-updated', handleRetakePreferencesUpdate)
+    return () => {
+      window.removeEventListener('retake-preferences-updated', handleRetakePreferencesUpdate)
+    }
+  }, [refreshRetakePreferences])
+
   const value: DashboardDataContextValue = {
     errors,
     notions,
