@@ -368,7 +368,7 @@ export default function NotionsPage() {
       {/* Notions to Review */}
       {notionsDue.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
             À réviser aujourd&apos;hui ({notionsDue.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -432,7 +432,7 @@ export default function NotionsPage() {
       {/* Upcoming Notions */}
       {notionsUpcoming.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xl sm:text-3xl font-semibold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
             Prochaines révisions ({notionsUpcoming.length})
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

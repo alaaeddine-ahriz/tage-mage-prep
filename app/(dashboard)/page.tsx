@@ -17,6 +17,11 @@ import { signOut } from '@/lib/supabase/auth'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useDashboardData } from '@/lib/state/dashboard-data'
 import { WorkCalendar } from '@/components/dashboard/WorkCalendar'
+import {
+  isTestDueForRetake,
+  isFullTestDueForRetake,
+  shouldScheduleRetake,
+} from '@/lib/utils/retakes'
 
 export default function ProfilePage() {
   const [userEmail, setUserEmail] = useState<string>('Utilisateur')
@@ -28,6 +33,7 @@ export default function ProfilePage() {
     fullTests,
     errors,
     notions,
+    retakeIntervalDays,
     isInitializing,
   } = useDashboardData()
 
@@ -69,6 +75,17 @@ export default function ProfilePage() {
     )
   }, [notions])
 
+  const testsDue = useMemo(() => {
+    const individualDue = tests.filter((test) => 
+      shouldScheduleRetake(test.type, test.subtest) && 
+      isTestDueForRetake(test, retakeIntervalDays)
+    )
+    const fullTestsDue = fullTestsList.filter((test) => 
+      isFullTestDueForRetake(test, retakeIntervalDays)
+    )
+    return individualDue.length + fullTestsDue.length
+  }, [tests, fullTestsList, retakeIntervalDays])
+
   if (isInitializing) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -108,7 +125,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="space-y-1 md:space-y-2 md:mt-6">
         <h1 className="text-2xl md:text-4xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Bienvenue {userEmail}</p>
+        {/* <p className="text-sm text-muted-foreground">Bienvenue {userEmail}</p> */}
       </div>
 
       {/* Résumé */}
@@ -138,13 +155,13 @@ export default function ProfilePage() {
               <div className="text-2xl font-bold text-foreground">{averageScore}/60</div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-background to-muted/20 p-4 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
             <div className="relative">
               <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-1">
-                Tests
+                À refaire
               </div>
-              <div className="text-2xl font-bold text-foreground">{tests.length}</div>
+              <div className="text-2xl font-bold text-primary">{testsDue}</div>
             </div>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 backdrop-blur-sm">
@@ -169,14 +186,14 @@ export default function ProfilePage() {
       </div>
 
       {/* Calendrier des activités */}
-      <div className="space-y-3">
+      <div className="space-y-0">
         <h2 className="text-xl sm:text-3xl font-semibold text-foreground">Activités récentes</h2>
         <WorkCalendar tests={tests} fullTests={fullTestsList} />
       </div>
 
       {/* Historique des tests */}
       {tests.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-0">
           <h2 className="text-xl sm:text-3xl font-semibold text-foreground">Derniers tests</h2>
           <div className="divide-y divide-border">
             {tests.slice(0, 5).map((test) => {
