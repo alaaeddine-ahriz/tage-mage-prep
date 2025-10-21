@@ -334,18 +334,21 @@ export interface Database {
         Row: {
           user_id: string
           default_retake_delay_days: number
+          retake_score_threshold: number
           created_at: string
           updated_at: string
         }
         Insert: {
           user_id: string
           default_retake_delay_days?: number
+          retake_score_threshold?: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           user_id?: string
           default_retake_delay_days?: number
+          retake_score_threshold?: number
           created_at?: string
           updated_at?: string
         }

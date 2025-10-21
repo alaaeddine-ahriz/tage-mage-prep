@@ -44,7 +44,7 @@ const RETAKE_FILTERS = [
 ]
 
 export default function TestsPage() {
-  const { tests, fullTests, refreshTests, refreshFullTests, retakeIntervalDays } = useDashboardData()
+  const { tests, fullTests, refreshTests, refreshFullTests, retakeIntervalDays, retakeScoreThreshold } = useDashboardData()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFullTestFormOpen, setIsFullTestFormOpen] = useState(false)
   const [selectedTest, setSelectedTest] = useState<TestWithAttempts | null>(null)
@@ -70,16 +70,16 @@ export default function TestsPage() {
       // Vérifier si le test correspond à au moins un des filtres sélectionnés
       const matchesRetake = retakeFilters.some((filter) => {
         if (filter === 'due') {
-          return shouldScheduleRetake(test.type, test.subtest) && isTestDueForRetake(test, retakeIntervalDays)
+          return shouldScheduleRetake(test.type, test.subtest) && isTestDueForRetake(test, retakeIntervalDays, retakeScoreThreshold)
         } else if (filter === 'upcoming') {
-          return shouldScheduleRetake(test.type, test.subtest) && isTestUpcomingRetake(test, retakeIntervalDays)
+          return shouldScheduleRetake(test.type, test.subtest) && isTestUpcomingRetake(test, retakeIntervalDays, retakeScoreThreshold)
         }
         return false
       })
       
       return matchesSubtest && matchesRetake
     })
-  }, [testsList, subtestFilter, retakeFilters, retakeIntervalDays])
+  }, [testsList, subtestFilter, retakeFilters, retakeIntervalDays, retakeScoreThreshold])
 
   const filteredFullTests = useMemo(() => {
     // Si aucun filtre de retake n'est sélectionné, afficher tous
@@ -91,14 +91,14 @@ export default function TestsPage() {
     return fullTestsList.filter((test) => {
       return retakeFilters.some((filter) => {
         if (filter === 'due') {
-          return isFullTestDueForRetake(test, retakeIntervalDays)
+          return isFullTestDueForRetake(test, retakeIntervalDays, retakeScoreThreshold)
         } else if (filter === 'upcoming') {
-          return isFullTestUpcomingRetake(test, retakeIntervalDays)
+          return isFullTestUpcomingRetake(test, retakeIntervalDays, retakeScoreThreshold)
         }
         return false
       })
     })
-  }, [fullTestsList, retakeFilters, retakeIntervalDays])
+  }, [fullTestsList, retakeFilters, retakeIntervalDays, retakeScoreThreshold])
 
   useEffect(() => {
     if (!selectedTest) return
@@ -186,8 +186,8 @@ export default function TestsPage() {
     filteredTests.length > 0 ? (
       <div className="divide-y divide-border">
         {filteredTests.map((test: TestWithAttempts) => {
-          const isDue = shouldScheduleRetake(test.type, test.subtest) && isTestDueForRetake(test, retakeIntervalDays)
-          const isUpcoming = shouldScheduleRetake(test.type, test.subtest) && isTestUpcomingRetake(test, retakeIntervalDays)
+          const isDue = shouldScheduleRetake(test.type, test.subtest) && isTestDueForRetake(test, retakeIntervalDays, retakeScoreThreshold)
+          const isUpcoming = shouldScheduleRetake(test.type, test.subtest) && isTestUpcomingRetake(test, retakeIntervalDays, retakeScoreThreshold)
           const nextRetakeDate = (isDue || isUpcoming) ? getTestNextRetakeDate(test, retakeIntervalDays) : null
 
           return (
@@ -292,8 +292,8 @@ export default function TestsPage() {
     filteredFullTests.length > 0 ? (
       <div className="divide-y divide-border">
         {filteredFullTests.map((fullTest) => {
-          const isDue = isFullTestDueForRetake(fullTest, retakeIntervalDays)
-          const isUpcoming = isFullTestUpcomingRetake(fullTest, retakeIntervalDays)
+          const isDue = isFullTestDueForRetake(fullTest, retakeIntervalDays, retakeScoreThreshold)
+          const isUpcoming = isFullTestUpcomingRetake(fullTest, retakeIntervalDays, retakeScoreThreshold)
           const nextRetakeDate = (isDue || isUpcoming) ? getFullTestNextRetakeDate(fullTest, retakeIntervalDays) : null
 
           return (

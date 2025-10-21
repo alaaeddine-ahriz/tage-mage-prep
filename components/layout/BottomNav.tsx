@@ -26,7 +26,8 @@ export function BottomNav() {
               )}
             >
               {isActive && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-amber-600 dark:bg-primary rounded-full" />
+                // <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-amber-600 dark:bg-primary rounded-full" />
+                <div className=""></div>
               )}
               <item.icon className={cn(
                 'h-6 w-6 transition-all duration-300',

@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { DEFAULT_RETAKE_INTERVAL_DAYS, getUserRetakeIntervalDays } from '@/lib/utils/retakes'
+import { 
+  DEFAULT_RETAKE_INTERVAL_DAYS, 
+  DEFAULT_RETAKE_SCORE_THRESHOLD,
+  getUserRetakeIntervalDays,
+  getUserRetakeScoreThreshold 
+} from '@/lib/utils/retakes'
 import { FloatingButtonsContainer, FloatingButton } from '@/components/ui/floating-buttons'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
@@ -17,7 +22,8 @@ interface RetakePreferencesFormProps {
 
 export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
   const isMobile = useIsMobile()
-  const [inputValue, setInputValue] = useState<string>(DEFAULT_RETAKE_INTERVAL_DAYS.toString())
+  const [intervalValue, setIntervalValue] = useState<string>(DEFAULT_RETAKE_INTERVAL_DAYS.toString())
+  const [thresholdValue, setThresholdValue] = useState<string>(DEFAULT_RETAKE_SCORE_THRESHOLD.toString())
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -31,8 +37,12 @@ export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
 
         if (!user) return
 
-        const intervalDays = await getUserRetakeIntervalDays(supabase, user.id)
-        setInputValue(intervalDays.toString())
+        const [intervalDays, threshold] = await Promise.all([
+          getUserRetakeIntervalDays(supabase, user.id),
+          getUserRetakeScoreThreshold(supabase, user.id),
+        ])
+        setIntervalValue(intervalDays.toString())
+        setThresholdValue(threshold.toString())
       } catch (error) {
         console.error('Error loading retake preferences:', error)
       } finally {
@@ -44,8 +54,16 @@ export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
   }, [])
 
   const handleSave = async () => {
-    const parsed = Number.parseInt(inputValue, 10)
-    const sanitized = Number.isNaN(parsed) || parsed <= 0 ? DEFAULT_RETAKE_INTERVAL_DAYS : Math.min(Math.max(parsed, 1), 60)
+    const parsedInterval = Number.parseInt(intervalValue, 10)
+    const parsedThreshold = Number.parseInt(thresholdValue, 10)
+    
+    const sanitizedInterval = Number.isNaN(parsedInterval) || parsedInterval <= 0 
+      ? DEFAULT_RETAKE_INTERVAL_DAYS 
+      : Math.min(Math.max(parsedInterval, 1), 60)
+    
+    const sanitizedThreshold = Number.isNaN(parsedThreshold) || parsedThreshold <= 0 || parsedThreshold > 100
+      ? DEFAULT_RETAKE_SCORE_THRESHOLD
+      : Math.min(Math.max(parsedThreshold, 1), 100)
 
     setIsSaving(true)
 
@@ -65,7 +83,8 @@ export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
         .upsert(
           {
             user_id: user.id,
-            default_retake_delay_days: sanitized,
+            default_retake_delay_days: sanitizedInterval,
+            retake_score_threshold: sanitizedThreshold,
           },
           { onConflict: 'user_id' }
         )
@@ -107,16 +126,37 @@ export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
               type="number"
               min={1}
               max={60}
-              value={inputValue}
-              onChange={(event) => setInputValue(event.target.value)}
+              value={intervalValue}
+              onChange={(event) => setIntervalValue(event.target.value)}
               className="flex-1"
             />
             <span className="text-sm text-muted-foreground whitespace-nowrap">
-              jour{Number.parseInt(inputValue || '0', 10) > 1 ? 's' : ''}
+              jour{Number.parseInt(intervalValue || '0', 10) > 1 ? 's' : ''}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Ce délai s&apos;applique aux TD Logique, Conditions, Calcul et aux tests complets.
+            Pour les tests faits une seule fois.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="retake-threshold">Seuil de score pour refaire un test</Label>
+          <div className="flex items-center gap-2 w-full">
+            <Input
+              id="retake-threshold"
+              type="number"
+              min={1}
+              max={100}
+              value={thresholdValue}
+              onChange={(event) => setThresholdValue(event.target.value)}
+              className="flex-1"
+            />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              %
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Si le score de la dernière tentative est inférieur à ce seuil, le test apparaît comme à refaire.
           </p>
         </div>
 

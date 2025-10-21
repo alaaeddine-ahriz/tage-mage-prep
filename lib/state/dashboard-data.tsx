@@ -14,7 +14,12 @@ import type {
   FullTestAttempt,
   FullTestAttemptSubtest,
 } from '@/lib/types/database.types'
-import { getUserRetakeIntervalDays, DEFAULT_RETAKE_INTERVAL_DAYS } from '@/lib/utils/retakes'
+import { 
+  getUserRetakeIntervalDays, 
+  getUserRetakeScoreThreshold,
+  DEFAULT_RETAKE_INTERVAL_DAYS,
+  DEFAULT_RETAKE_SCORE_THRESHOLD 
+} from '@/lib/utils/retakes'
 
 interface DashboardDataContextValue {
   errors: SupabaseError[] | null
@@ -22,6 +27,7 @@ interface DashboardDataContextValue {
   tests: TestWithAttempts[] | null
   fullTests: FullTestWithAttempts[] | null
   retakeIntervalDays: number
+  retakeScoreThreshold: number
   refreshErrors: () => Promise<void>
   refreshNotions: () => Promise<void>
   refreshTests: () => Promise<void>
@@ -164,6 +170,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [tests, setTests] = useState<TestWithAttempts[] | null>(null)
   const [fullTests, setFullTests] = useState<FullTestWithAttempts[] | null>(null)
   const [retakeIntervalDays, setRetakeIntervalDays] = useState<number>(DEFAULT_RETAKE_INTERVAL_DAYS)
+  const [retakeScoreThreshold, setRetakeScoreThreshold] = useState<number>(DEFAULT_RETAKE_SCORE_THRESHOLD)
   const [isInitializing, setIsInitializing] = useState(true)
   const userIdRef = useRef<string | null>(null)
   const isFetchingRef = useRef(false)
@@ -190,12 +197,13 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       setIsInitializing(true)
       const userId = await ensureUser()
 
-      const [errorsData, notionsData, testsData, fullTestsData, intervalDays] = await Promise.all([
+      const [errorsData, notionsData, testsData, fullTestsData, intervalDays, scoreThreshold] = await Promise.all([
         fetchErrors(supabase, userId),
         fetchNotions(supabase, userId),
         fetchTests(supabase, userId),
         fetchFullTests(supabase, userId),
         getUserRetakeIntervalDays(supabase, userId),
+        getUserRetakeScoreThreshold(supabase, userId),
       ])
 
       setErrors(errorsData)
@@ -203,6 +211,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       setTests(testsData)
       setFullTests(fullTestsData)
       setRetakeIntervalDays(intervalDays)
+      setRetakeScoreThreshold(scoreThreshold)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
       setErrors([])
@@ -210,6 +219,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       setTests([])
       setFullTests([])
       setRetakeIntervalDays(DEFAULT_RETAKE_INTERVAL_DAYS)
+      setRetakeScoreThreshold(DEFAULT_RETAKE_SCORE_THRESHOLD)
     } finally {
       setIsInitializing(false)
       isFetchingRef.current = false
@@ -263,8 +273,12 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const refreshRetakePreferences = useCallback(async () => {
     try {
       const userId = await ensureUser()
-      const intervalDays = await getUserRetakeIntervalDays(supabase, userId)
+      const [intervalDays, scoreThreshold] = await Promise.all([
+        getUserRetakeIntervalDays(supabase, userId),
+        getUserRetakeScoreThreshold(supabase, userId),
+      ])
       setRetakeIntervalDays(intervalDays)
+      setRetakeScoreThreshold(scoreThreshold)
     } catch (error) {
       console.error('Error refreshing retake preferences:', error)
     }
@@ -288,6 +302,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     tests,
     fullTests,
     retakeIntervalDays,
+    retakeScoreThreshold,
     refreshErrors,
     refreshNotions,
     refreshTests,

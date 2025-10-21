@@ -37,6 +37,7 @@ export default function ProfilePage() {
     errors,
     notions,
     retakeIntervalDays,
+    retakeScoreThreshold,
     isInitializing,
   } = useDashboardData()
 
@@ -81,13 +82,13 @@ export default function ProfilePage() {
   const testsDue = useMemo(() => {
     const individualDue = tests.filter((test) => 
       shouldScheduleRetake(test.type, test.subtest) && 
-      isTestDueForRetake(test, retakeIntervalDays)
+      isTestDueForRetake(test, retakeIntervalDays, retakeScoreThreshold)
     )
     const fullTestsDue = fullTestsList.filter((test) => 
-      isFullTestDueForRetake(test, retakeIntervalDays)
+      isFullTestDueForRetake(test, retakeIntervalDays, retakeScoreThreshold)
     )
     return individualDue.length + fullTestsDue.length
-  }, [tests, fullTestsList, retakeIntervalDays])
+  }, [tests, fullTestsList, retakeIntervalDays, retakeScoreThreshold])
 
   if (isInitializing) {
     return (
