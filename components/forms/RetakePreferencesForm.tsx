@@ -60,7 +60,6 @@ export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
         return
       }
 
-      // @ts-ignore - user_preferences table exists but may not be in generated types yet
       const { error } = await supabase
         .from('user_preferences')
         .upsert(
@@ -117,7 +116,7 @@ export function RetakePreferencesForm({ onSaved }: RetakePreferencesFormProps) {
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Ce délai s'applique aux TD Logique, Conditions, Calcul et aux tests complets.
+            Ce délai s&apos;applique aux TD Logique, Conditions, Calcul et aux tests complets.
           </p>
         </div>
 

@@ -40,9 +40,9 @@ export default function ProfilePage() {
     isInitializing,
   } = useDashboardData()
 
-  const tests = (testsData ?? []) as TestWithAttempts[]
-  const fullTestsList = (fullTests ?? []) as FullTestWithAttempts[]
-  const notionsList = (notions ?? []) as Notion[]
+  const tests = useMemo(() => (testsData ?? []) as TestWithAttempts[], [testsData])
+  const fullTestsList = useMemo(() => (fullTests ?? []) as FullTestWithAttempts[], [fullTests])
+  const notionsList = useMemo(() => (notions ?? []) as Notion[], [notions])
 
   useEffect(() => {
     const fetchUserEmail = async () => {
