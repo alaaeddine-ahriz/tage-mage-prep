@@ -160,6 +160,20 @@ export default function NotionsPage() {
     if (!notion) return
     setUpdating(true)
 
+    const nextTarget =
+      isMobile && combinedNotions.length > 0
+        ? (() => {
+            const nextIndex = currentIndex + 1
+            if (nextIndex < combinedNotions.length) {
+              return {
+                notion: combinedNotions[nextIndex] as Notion,
+                index: nextIndex,
+              }
+            }
+            return null
+          })()
+        : null
+
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -202,8 +216,15 @@ export default function NotionsPage() {
 
       await refreshNotions()
       
-      // In mobile carousel, don't close - just stay on same index
-      if (!isMobile) {
+      if (isMobile) {
+        if (nextTarget) {
+          setSelectedNotion(nextTarget.notion)
+          setCurrentIndex(nextTarget.index)
+        } else {
+          setSelectedNotion(null)
+          setCurrentIndex(0)
+        }
+      } else {
         setSelectedNotion(null)
       }
     } catch (error) {

@@ -175,6 +175,20 @@ export default function ErrorsPage() {
     if (!error) return
     setUpdating(true)
 
+    const nextTarget =
+      isMobile && combinedFilteredErrors.length > 0
+        ? (() => {
+            const nextIndex = currentIndex + 1
+            if (nextIndex < combinedFilteredErrors.length) {
+              return {
+                error: combinedFilteredErrors[nextIndex] as SupabaseError,
+                index: nextIndex,
+              }
+            }
+            return null
+          })()
+        : null
+
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -216,8 +230,15 @@ export default function ErrorsPage() {
 
       await refreshErrors()
       
-      // In mobile carousel, don't close - just stay on same index
-      if (!isMobile) {
+      if (isMobile) {
+        if (nextTarget) {
+          setSelectedError(nextTarget.error)
+          setCurrentIndex(nextTarget.index)
+        } else {
+          setSelectedError(null)
+          setCurrentIndex(0)
+        }
+      } else {
         setSelectedError(null)
       }
     } catch (error) {
