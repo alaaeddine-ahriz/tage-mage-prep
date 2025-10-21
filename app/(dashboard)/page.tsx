@@ -108,6 +108,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="space-y-1 md:space-y-2 md:mt-6">
         <h1 className="text-2xl md:text-4xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Bienvenue {userEmail}</p>
       </div>
 
       {/* Résumé */}

@@ -62,26 +62,6 @@ export default function ErrorsPage() {
     }
   }, [errorsList, selectedError])
 
-  useEffect(() => {
-    if (!selectedError) return
-
-    const nextIndex = combinedFilteredErrors.findIndex((err) => err.id === selectedError.id)
-    if (nextIndex === -1) {
-      setSelectedError(null)
-      setCurrentIndex(0)
-      return
-    }
-
-    const indexedError = combinedFilteredErrors[nextIndex] as SupabaseError
-    if (indexedError !== selectedError) {
-      setSelectedError(indexedError)
-    }
-
-    if (nextIndex !== currentIndex) {
-      setCurrentIndex(nextIndex)
-    }
-  }, [combinedFilteredErrors, selectedError, currentIndex])
-
   const handleFormSuccess = () => {
     setIsFormOpen(false)
   }
@@ -121,6 +101,26 @@ export default function ErrorsPage() {
     () => [...filteredErrorsDue, ...filteredErrorsUpcoming],
     [filteredErrorsDue, filteredErrorsUpcoming]
   )
+
+  useEffect(() => {
+    if (!selectedError) return
+
+    const nextIndex = combinedFilteredErrors.findIndex((err) => err.id === selectedError.id)
+    if (nextIndex === -1) {
+      setSelectedError(null)
+      setCurrentIndex(0)
+      return
+    }
+
+    const indexedError = combinedFilteredErrors[nextIndex] as SupabaseError
+    if (indexedError !== selectedError) {
+      setSelectedError(indexedError)
+    }
+
+    if (nextIndex !== currentIndex) {
+      setCurrentIndex(nextIndex)
+    }
+  }, [combinedFilteredErrors, selectedError, currentIndex])
 
   const openErrorModal = (error: SupabaseError) => {
     setSelectedError(error)

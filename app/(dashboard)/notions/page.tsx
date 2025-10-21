@@ -62,26 +62,6 @@ export default function NotionsPage() {
     }
   }, [notionsList, selectedNotion])
 
-  useEffect(() => {
-    if (!selectedNotion) return
-
-    const nextIndex = combinedNotions.findIndex((notion) => notion.id === selectedNotion.id)
-    if (nextIndex === -1) {
-      setSelectedNotion(null)
-      setCurrentIndex(0)
-      return
-    }
-
-    const indexedNotion = combinedNotions[nextIndex] as Notion
-    if (indexedNotion !== selectedNotion) {
-      setSelectedNotion(indexedNotion)
-    }
-
-    if (nextIndex !== currentIndex) {
-      setCurrentIndex(nextIndex)
-    }
-  }, [combinedNotions, selectedNotion, currentIndex])
-
   const handleFormSuccess = () => {
     setIsFormOpen(false)
   }
@@ -104,6 +84,26 @@ export default function NotionsPage() {
     () => [...notionsDue, ...notionsUpcoming],
     [notionsDue, notionsUpcoming]
   )
+
+  useEffect(() => {
+    if (!selectedNotion) return
+
+    const nextIndex = combinedNotions.findIndex((notion) => notion.id === selectedNotion.id)
+    if (nextIndex === -1) {
+      setSelectedNotion(null)
+      setCurrentIndex(0)
+      return
+    }
+
+    const indexedNotion = combinedNotions[nextIndex] as Notion
+    if (indexedNotion !== selectedNotion) {
+      setSelectedNotion(indexedNotion)
+    }
+
+    if (nextIndex !== currentIndex) {
+      setCurrentIndex(nextIndex)
+    }
+  }, [combinedNotions, selectedNotion, currentIndex])
 
   const openNotionModal = (notion: Notion) => {
     setSelectedNotion(notion)
