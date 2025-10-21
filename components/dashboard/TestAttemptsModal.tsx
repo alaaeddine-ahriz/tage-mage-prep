@@ -188,7 +188,7 @@ export function TestAttemptsModal({ test, open, onOpenChange, onSuccess }: TestA
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="score">Bonnes réponses (/60)</Label>
+            <Label htmlFor="score">Bonnes réponses (/15)</Label>
             <Input
               id="score"
               type="number"
